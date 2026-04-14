@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Container, Nav, Navbar, Offcanvas } from "react-bootstrap";
 import logo from "../../assets/electric-car.png";
-import { supabase } from "../../database/supabaseconfig.js";
+import { supabase } from "../../database/supabaseconfig";
 
-const Encabezado = () => {
+const encabezado = () => {
 
     const [mostrarMenu, setMostrarMenu] = useState(false);
     const navigate = useNavigate();
@@ -76,64 +76,21 @@ const Encabezado = () => {
                             <strong>Inicio</strong>
                         </Nav.Link>
 
-
-
                         <Nav.Link
-                            onClick={() => manejarNavegacion("/alquileres")}
+                            onClick={() => manejarNavegacion("/categorias")}
                             className={mostrarMenu ? "color-texto-marca" : "text-white"}
                         >
                             {mostrarMenu ? <i className="bi-bookmark-fill me-2"></i> : null}
-                            <strong>Alquileres</strong>
+                            <strong>Categorías</strong>
                         </Nav.Link>
 
                         <Nav.Link
-                            onClick={() => manejarNavegacion("/coches")}
+                            onClick={() => manejarNavegacion("/productos")}
                             className={mostrarMenu ? "color-texto-marca" : "text-white"}
                         >
                             {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
-                            <strong>Coches</strong>
+                            <strong>Productos</strong>
                         </Nav.Link>
-
-                        <Nav.Link
-                            onClick={() => manejarNavegacion("/detalles_alquiler")}
-                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
-                        >
-                            {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
-                            <strong>Detalles_Alquiler</strong>
-                        </Nav.Link>
-
-                        <Nav.Link
-                            onClick={() => manejarNavegacion("/detalles_mantenimiento")}
-                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
-                        >
-                            {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
-                            <strong>Detalles_Mantenimiento</strong>
-                        </Nav.Link>
-
-                        <Nav.Link
-                            onClick={() => manejarNavegacion("/empleados")}
-                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
-                        >
-                            {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
-                            <strong>Empleados</strong>
-                        </Nav.Link>
-
-                        <Nav.Link
-                            onClick={() => manejarNavegacion("/mantenimientos")}
-                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
-                        >
-                            {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
-                            <strong>Mantenimientos</strong>
-                        </Nav.Link>
-
-                        <Nav.Link
-                            onClick={() => manejarNavegacion("/usuarios")}
-                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
-                        >
-                            {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
-                            <strong>Usuarios</strong>
-                        </Nav.Link>
-
 
                         {/* Opción para ir al catálogo público desde admin */}
                         <Nav.Link
@@ -143,7 +100,8 @@ const Encabezado = () => {
                             {mostrarMenu ? <i className="bi-images me-2"></i> : null}
                             <strong>Catálogo</strong>
                         </Nav.Link>
-                        <hr />
+
+
 
                         {/* Ícono cerrar sesión en barra superior */}
                         {mostrarMenu ? null : (
@@ -154,6 +112,7 @@ const Encabezado = () => {
                                 <i className="bi-box-arrow-right me-2"></i>
                             </Nav.Link>
                         )}
+
                         <hr />
                     </Nav>
 
@@ -162,10 +121,9 @@ const Encabezado = () => {
                         <div className="mt-3 p-3 rounded bg-light text-dark">
                             <p className="mb-2">
                                 <i className="bi-envelope-fill me-2"></i>
-                                {localStorage.getItem("usuario-supabase")?.toLowerCase() ||
-                                    "Usuario"}
+                                {(localStorage.getItem("usuario-supabase")?.toLowerCase() ||
+                                    "Usuario")}
                             </p>
-
                             <button
                                 className="btn btn-outline-danger mt-3 w-100"
                                 onClick={cerrarSesion}
@@ -224,9 +182,10 @@ const Encabezado = () => {
                         {contenidoMenu}
                     </Offcanvas.Body>
                 </Navbar.Offcanvas>
+
             </Container>
         </Navbar>
     );
 };
 
-export default Encabezado;
+export default encabezado;

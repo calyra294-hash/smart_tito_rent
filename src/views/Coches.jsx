@@ -3,7 +3,7 @@ const Coche = () => {
     <Container className="mt-3">
       <Row className="align-items-center">
         <Col>
-          <h2><i className="bi-images me-2"></i> Coche</h2>
+          <h2><i className="bi-images me-2"></i> Coches</h2>
         </Col>
       </Row>
     </Container>

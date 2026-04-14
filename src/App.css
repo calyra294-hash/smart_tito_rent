@@ -7,3 +7,23 @@
   color: #A11768 !important;
   font-size: 18px;
 }
+
+.margen-superior-main {
+  margin-top: 50px;
+  padding: 20px;
+}
+
+
+.boton-ancho-auto {
+  width: auto;
+}
+
+.margen-superior-main {
+  margin-top: 50px;
+  padding: 20px;
+}
+
+.color-texto-marca {
+  color: #1e3d87 !important;
+  font-size: 18px;
+}
