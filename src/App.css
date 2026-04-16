@@ -27,3 +27,9 @@
   color: #1e3d87 !important;
   font-size: 18px;
 }
+
+
+body {
+  margin: 0;
+  padding: 0;
+}

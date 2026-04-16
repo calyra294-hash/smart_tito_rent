@@ -1,16 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Button } from "react-bootstrap";
+import React from "react";
+import { Container, Row, Col } from "react-bootstrap";
+import fondo from "../assets/Resultado de imagen para imagenes para portada de pantalla.jpg"; // ajusta la ruta
 
 const Inicio = () => {
-
   return (
-    <Container className="mt-3">
-      <Row className="align-items-center">
-        <Col>
-          <h2><i className="bi-house-fill me-2"></i> Inicio</h2>
-        </Col>
-      </Row>
-    </Container>
+    <div
+  style={{
+    backgroundImage: `url(${fondo})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    minHeight: "100vh",
+    width: "100%",
+    margin: 0,
+    padding: 0
+  }}
+>
+      <Container fluid className="p-0">
+        <Row className="w-100">
+          <Col>
+            <h1></h1>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
-}
+};
+
 export default Inicio;

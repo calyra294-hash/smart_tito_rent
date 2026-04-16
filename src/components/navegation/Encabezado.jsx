@@ -77,19 +77,19 @@ const encabezado = () => {
                         </Nav.Link>
 
                         <Nav.Link
-                            onClick={() => manejarNavegacion("/categorias")}
+                            onClick={() => manejarNavegacion("/alquileres")}
                             className={mostrarMenu ? "color-texto-marca" : "text-white"}
                         >
                             {mostrarMenu ? <i className="bi-bookmark-fill me-2"></i> : null}
-                            <strong>Categorías</strong>
+                            <strong>Alquileres</strong>
                         </Nav.Link>
 
                         <Nav.Link
-                            onClick={() => manejarNavegacion("/productos")}
+                            onClick={() => manejarNavegacion("/coches")}
                             className={mostrarMenu ? "color-texto-marca" : "text-white"}
                         >
                             {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
-                            <strong>Productos</strong>
+                            <strong>Coches</strong>
                         </Nav.Link>
 
                         {/* Opción para ir al catálogo público desde admin */}
@@ -100,6 +100,39 @@ const encabezado = () => {
                             {mostrarMenu ? <i className="bi-images me-2"></i> : null}
                             <strong>Catálogo</strong>
                         </Nav.Link>
+                        
+                        <Nav.Link
+                            onClick={() => manejarNavegacion("/detalles_alquiler")}
+                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
+                        >
+                            {mostrarMenu ? <i className="bi-images me-2"></i> : null}
+                            <strong>Detalles_Alquiler</strong>
+                        </Nav.Link>
+
+                        <Nav.Link
+                            onClick={() => manejarNavegacion("/detalles_mantenimiento")}
+                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
+                        >
+                            {mostrarMenu ? <i className="bi-images me-2"></i> : null}
+                            <strong>Detalles_Manteniemiento</strong>
+                        </Nav.Link>
+
+                        <Nav.Link
+                            onClick={() => manejarNavegacion("/empleado")}
+                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
+                        >
+                            {mostrarMenu ? <i className="bi-images me-2"></i> : null}
+                            <strong>Empleados</strong>
+                        </Nav.Link>
+
+                        <Nav.Link
+                            onClick={() => manejarNavegacion("/mantenimientos")}
+                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
+                        >
+                            {mostrarMenu ? <i className="bi-images me-2"></i> : null}
+                            <strong>Mantenimientos</strong>
+                        </Nav.Link>
+
 
 
 
@@ -155,7 +188,7 @@ const encabezado = () => {
                         className="d-inline-block me-2"
                     />
                     <strong>
-                        <h4 className="mb-0">Discosa</h4>
+                        <h4 className="mb-0">Tito's Renta A Car</h4>
                     </strong>
                 </Navbar.Brand>
 
