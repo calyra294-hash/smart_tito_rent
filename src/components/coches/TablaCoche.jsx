@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Spinner, Button } from "react-bootstrap";
+import { Table, Button } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const TablaCoche = ({
@@ -11,7 +11,17 @@ const TablaCoche = ({
     // 📌 Formato limpio DATE
     const formatearFecha = (fecha) => {
         if (!fecha) return "-";
-        return fecha; // ya viene como YYYY-MM-DD desde Supabase
+        return fecha;
+    };
+
+    // 💰 Formato moneda
+    const formatearMoneda = (valor) => {
+        if (!valor) return "C$ 0.00";
+
+        return Number(valor).toLocaleString("es-NI", {
+            style: "currency",
+            currency: "NIO",
+        });
     };
 
     return (
@@ -45,10 +55,13 @@ const TablaCoche = ({
                                 <td>{coche.modelo}</td>
                                 <td>{coche.anio}</td>
                                 <td>{coche.placa}</td>
+
                                 <td className="d-none d-md-table-cell">
                                     {coche.color}
                                 </td>
-                                <td>{coche.valor_dia}</td>
+
+                                {/* 💰 VALOR CON MONEDA */}
+                                <td>{formatearMoneda(coche.valor_dia)}</td>
 
                                 <td>
                                     <span
@@ -64,7 +77,7 @@ const TablaCoche = ({
                                     </span>
                                 </td>
 
-                                {/* 📌 FECHA LIMPIA */}
+                                {/* 📅 FECHA */}
                                 <td>{formatearFecha(coche.fecha_registro)}</td>
 
                                 <td className="text-center">
