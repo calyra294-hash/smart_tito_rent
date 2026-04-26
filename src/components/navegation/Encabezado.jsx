@@ -118,7 +118,7 @@ const encabezado = () => {
                         </Nav.Link>
 
                         <Nav.Link
-                            onClick={() => manejarNavegacion("/empleado")}
+                            onClick={() => manejarNavegacion("/empleados")}
                             className={mostrarMenu ? "color-texto-marca" : "text-white"}
                         >
                             {mostrarMenu ? <i className="bi-images me-2"></i> : null}
@@ -208,7 +208,7 @@ const encabezado = () => {
                     onHide={() => setMostrarMenu(false)}
                 >
                     <Offcanvas.Header closeButton>
-                        <Offcanvas.Title>Menú Discosa</Offcanvas.Title>
+                        <Offcanvas.Title>Menú Tito's Renta A Car</Offcanvas.Title>
                     </Offcanvas.Header>
 
                     <Offcanvas.Body>

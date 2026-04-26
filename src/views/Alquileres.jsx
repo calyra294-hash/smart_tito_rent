@@ -27,7 +27,7 @@ const Alquileres = () => {
 
     const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
 
-    // 🔥 AGREGADO estado
+
     const [alquilerEditar, setAlquilerEditar] = useState({
         id_alquiler: "",
         fecha_inicio: "",

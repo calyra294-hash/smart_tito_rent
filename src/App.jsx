@@ -5,7 +5,6 @@ import Encabezado from "./components/navegation/Encabezado.jsx";
 
 import Inicio from "./views/Inicio";
 import Catalogo from "./views/Catalogo.jsx"; 
-
 import Alquileres from "./views/Alquileres";
 import Coches from "./views/Coches";
 import Detalles_Alquiler from "./views/Detalles_Alquiler.jsx"; 
