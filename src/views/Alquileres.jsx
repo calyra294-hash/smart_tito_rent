@@ -12,9 +12,11 @@ const Alquileres = () => {
     const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "" });
     const [mostrarModal, setMostrarModal] = useState(false);
 
+
     const [nuevoAlquiler, setNuevoAlquiler] = useState({
         fecha_inicio: "",
         fecha_fin: "",
+        estado: "En espera",
     });
 
     const [alquileres, setAlquileres] = useState([]);
@@ -25,10 +27,12 @@ const Alquileres = () => {
 
     const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
 
+    // 🔥 AGREGADO estado
     const [alquilerEditar, setAlquilerEditar] = useState({
         id_alquiler: "",
         fecha_inicio: "",
         fecha_fin: "",
+        estado: "",
     });
 
     const cargarAlquileres = async () => {
@@ -81,7 +85,12 @@ const Alquileres = () => {
     };
 
     const agregarAlquiler = async () => {
-        if (!nuevoAlquiler.fecha_inicio || !nuevoAlquiler.fecha_fin) {
+        
+        if (
+            !nuevoAlquiler.fecha_inicio ||
+            !nuevoAlquiler.fecha_fin ||
+            !nuevoAlquiler.estado
+        ) {
             setToast({
                 mostrar: true,
                 mensaje: "Debe llenar todos los campos.",
@@ -110,7 +119,13 @@ const Alquileres = () => {
         });
 
         setMostrarModal(false);
-        setNuevoAlquiler({ fecha_inicio: "", fecha_fin: "" });
+
+        setNuevoAlquiler({
+            fecha_inicio: "",
+            fecha_fin: "",
+            estado: "En espera",
+        });
+
         cargarAlquileres();
     };
 
@@ -120,6 +135,7 @@ const Alquileres = () => {
             .update({
                 fecha_inicio: alquilerEditar.fecha_inicio,
                 fecha_fin: alquilerEditar.fecha_fin,
+                estado: alquilerEditar.estado, 
             })
             .eq("id_alquiler", alquilerEditar.id_alquiler);
 
@@ -194,9 +210,7 @@ const Alquileres = () => {
 
             <hr />
 
-            {cargando && (
-                <Spinner animation="border" />
-            )}
+            {cargando && <Spinner animation="border" />}
 
             {!cargando && (
                 <TablaAlquileres
@@ -222,11 +236,12 @@ const Alquileres = () => {
                 actualizarAlquiler={actualizarAlquiler}
             />
 
+
             <ModalEliminacionAlquiler
                 mostrarModalEliminacion={mostrarModalEliminacion}
                 setMostrarModalEliminacion={setMostrarModalEliminacion}
                 eliminarAlquiler={eliminarAlquiler}
-                alquiler={alquilerAEliminar}
+                alquilerAEliminar={alquilerAEliminar}
             />
 
             <NotificacionOperacion

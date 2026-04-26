@@ -50,6 +50,22 @@ const ModalEdicionAlquiler = ({
                             onChange={manejoCambioInputEdicion}
                         />
                     </Form.Group>
+
+
+                    <Form.Group className="mb-3">
+                        <Form.Label>Estado</Form.Label>
+                        <Form.Select
+                            name="estado"
+                            value={alquilerEditar.estado}
+                            onChange={manejoCambioInputEdicion}
+                        >
+                            <option value="">Seleccione estado</option>
+                            <option value="En espera">En espera</option>
+                            <option value="En curso">En curso</option>
+                            <option value="Finalizado">Finalizado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </Form.Select>
+                    </Form.Group>
                 </Form>
             </Modal.Body>
 
@@ -68,7 +84,8 @@ const ModalEdicionAlquiler = ({
                     disabled={
                         deshabilitado ||
                         !alquilerEditar.fecha_inicio ||
-                        !alquilerEditar.fecha_fin
+                        !alquilerEditar.fecha_fin ||
+                        !alquilerEditar.estado 
                     }
                 >
                     Actualizar

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Row, Col, Spinner, Button } from "react-bootstrap";
+import { Card, Row, Col, Spinner, Button, Badge } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const TarjetaAlquiler = ({
@@ -25,6 +25,14 @@ const TarjetaAlquiler = ({
 
     const alternarTarjetaActiva = (id) => {
         setIdTarjetaActiva((anterior) => (anterior === id ? null : id));
+    };
+
+    // 🔥 colores del estado
+    const obtenerColorEstado = (estado) => {
+        if (estado === "En curso") return "success";
+        if (estado === "Finalizado") return "primary";
+        if (estado === "En espera") return "warning";
+        return "danger"; // Cancelado
     };
 
     return (
@@ -76,11 +84,14 @@ const TarjetaAlquiler = ({
                                             </div>
                                         </Col>
 
+                                        {/* 🔥 ESTADO */}
                                         <Col
                                             xs={4}
                                             className="d-flex flex-column align-items-end justify-content-center text-end"
                                         >
-                                            <div className="fw-semibold small">Activo</div>
+                                            <Badge bg={obtenerColorEstado(alquiler.estado)}>
+                                                {alquiler.estado}
+                                            </Badge>
                                         </Col>
                                     </Row>
                                 </Card.Body>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Spinner, Button } from "react-bootstrap";
+import { Table, Spinner, Button, Badge } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const TablaAlquileres = ({
@@ -17,6 +17,14 @@ const TablaAlquileres = ({
         }
     }, [alquileres]);
 
+    // 🔥 función para colores del estado
+    const obtenerColorEstado = (estado) => {
+        if (estado === "En curso") return "success";
+        if (estado === "Finalizado") return "primary";
+        if (estado === "En espera") return "warning";
+        return "danger"; // Cancelado
+    };
+
     return (
         <>
             {loading ? (
@@ -31,6 +39,8 @@ const TablaAlquileres = ({
                             <th>#</th>
                             <th>Fecha Inicio</th>
                             <th className="d-none d-md-table-cell">Fecha Fin</th>
+                            {/* 🔥 NUEVA COLUMNA */}
+                            <th>Estado</th>
                             <th className="text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -42,6 +52,14 @@ const TablaAlquileres = ({
                                 <td className="d-none d-md-table-cell">
                                     {alquiler.fecha_fin}
                                 </td>
+
+                                {/* 🔥 MOSTRAR ESTADO */}
+                                <td>
+                                    <Badge bg={obtenerColorEstado(alquiler.estado)}>
+                                        {alquiler.estado}
+                                    </Badge>
+                                </td>
+
                                 <td className="text-center">
                                     <Button
                                         variant="outline-warning"
