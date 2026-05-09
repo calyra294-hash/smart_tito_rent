@@ -7,10 +7,16 @@ import ModalEdicionCoche from "../components/coches/ModalEdicionCoche";
 import ModalEliminacionCoche from "../components/coches/ModalEliminacionCoche";
 import TablaCoche from "../components/coches/TablaCoche";
 
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
 const Coches = () => {
-    const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "" });
+
+    const [toast, setToast] = useState({
+        mostrar: false,
+        mensaje: "",
+        tipo: "",
+    });
 
     const [mostrarModal, setMostrarModal] = useState(false);
 
@@ -22,18 +28,23 @@ const Coches = () => {
         color: "",
         valor_dia: "",
         estado: "Disponible",
+        archivo: null,
     });
 
     const [coches, setCoches] = useState([]);
+    const [cochesFiltrados, setCochesFiltrados] = useState([]);
+    const [textoBusqueda, setTextoBusqueda] = useState("");
     const [cargando, setCargando] = useState(true);
 
     const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
     const [cocheAEliminar, setCocheAEliminar] = useState(null);
 
     const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
-    const [cocheEditar, setCocheEditar] = useState({});
+    const [cocheEditar, setCocheEditar] = useState(null);
 
-    // 📌 CARGAR COCHES
+    // =========================
+    // CARGAR
+    // =========================
     const cargarCoches = async () => {
         setCargando(true);
 
@@ -43,6 +54,7 @@ const Coches = () => {
             .order("id_coche", { ascending: true });
 
         if (error) {
+            console.log(error);
             setToast({
                 mostrar: true,
                 mensaje: "Error al cargar vehículos",
@@ -53,6 +65,7 @@ const Coches = () => {
         }
 
         setCoches(data || []);
+        setCochesFiltrados(data || []);
         setCargando(false);
     };
 
@@ -60,156 +73,188 @@ const Coches = () => {
         cargarCoches();
     }, []);
 
-    // 📌 INPUT CREAR
+    // =========================
+    // FILTRO
+    // =========================
+    useEffect(() => {
+        const texto = textoBusqueda.toLowerCase();
+
+        setCochesFiltrados(
+            coches.filter((c) =>
+                [c.marca, c.modelo, c.placa, c.estado]
+                    .some((campo) => campo?.toLowerCase().includes(texto))
+            )
+        );
+    }, [textoBusqueda, coches]);
+
+    // =========================
+    // INPUT REGISTRO
+    // =========================
     const manejoCambioInput = (e) => {
         const { name, value } = e.target;
+        setNuevoCoche((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const manejoCambioArchivo = (e) => {
         setNuevoCoche((prev) => ({
             ...prev,
-            [name]: value,
+            archivo: e.target.files[0] || null,
         }));
     };
 
-    // 📌 INPUT EDITAR
+    // =========================
+    // INPUT EDICION (SOLO ESTADO)
+    // =========================
     const manejoCambioInputEdicion = (e) => {
         const { name, value } = e.target;
+
         setCocheEditar((prev) => ({
             ...prev,
             [name]: value,
         }));
     };
 
-    // 📌 CREAR COCHE (CORREGIDO A DATE)
+    // =========================
+    // REGISTRAR
+    // =========================
     const agregarCoche = async () => {
-        if (
-            !nuevoCoche.marca ||
-            !nuevoCoche.modelo ||
-            !nuevoCoche.anio ||
-            !nuevoCoche.placa ||
-            !nuevoCoche.valor_dia
-        ) {
+
+        try {
+            let urlImagen = "";
+
+            if (nuevoCoche.archivo) {
+                const nombreArchivo = `${Date.now()}_${nuevoCoche.archivo.name}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from("imagenes_coche")
+                    .upload(nombreArchivo, nuevoCoche.archivo);
+
+                if (uploadError) throw uploadError;
+
+                const { data } = supabase.storage
+                    .from("imagenes_coche")
+                    .getPublicUrl(nombreArchivo);
+
+                urlImagen = data.publicUrl;
+            }
+
+            const { error } = await supabase.from("coche").insert([{
+                marca: nuevoCoche.marca,
+                modelo: nuevoCoche.modelo,
+                anio: Number(nuevoCoche.anio),
+                placa: nuevoCoche.placa,
+                color: nuevoCoche.color,
+                valor_dia: Number(nuevoCoche.valor_dia),
+                estado: nuevoCoche.estado,
+                fecha_registro: new Date().toISOString().split("T")[0],
+                url_imagen: urlImagen,
+            }]);
+
+            if (error) throw error;
+
+            setMostrarModal(false);
+
+            setNuevoCoche({
+                marca: "",
+                modelo: "",
+                anio: "",
+                placa: "",
+                color: "",
+                valor_dia: "",
+                estado: "Disponible",
+                archivo: null,
+            });
+
+            cargarCoches();
+
             setToast({
                 mostrar: true,
-                mensaje: "Debe llenar los campos obligatorios",
-                tipo: "advertencia",
+                mensaje: "Vehículo registrado",
+                tipo: "exito",
             });
-            return;
-        }
 
-        const fechaHoy = new Date().toISOString().split("T")[0]; // ✅ SOLO DATE
-
-        const { error } = await supabase.from("coche").insert([
-            {
-                ...nuevoCoche,
-                fecha_registro: fechaHoy,
-            },
-        ]);
-
-        if (error) {
+        } catch (err) {
+            console.log(err);
             setToast({
                 mostrar: true,
                 mensaje: "Error al registrar vehículo",
                 tipo: "error",
             });
-            return;
         }
-
-        setToast({
-            mostrar: true,
-            mensaje: "Vehículo registrado exitosamente",
-            tipo: "exito",
-        });
-
-        setMostrarModal(false);
-
-        setNuevoCoche({
-            marca: "",
-            modelo: "",
-            anio: "",
-            placa: "",
-            color: "",
-            valor_dia: "",
-            estado: "Disponible",
-        });
-
-        cargarCoches();
     };
 
-    // 📌 ACTUALIZAR COCHE
+    // =========================
+    // ACTUALIZAR SOLO ESTADO
+    // =========================
     const actualizarCoche = async () => {
-        const { error } = await supabase
-            .from("coche")
-            .update({
-                ...cocheEditar,
-                fecha_actualizacion: new Date().toISOString().split("T")[0],
-            })
-            .eq("id_coche", cocheEditar.id_coche);
 
-        if (error) {
+        try {
+            const { error } = await supabase
+                .from("coche")
+                .update({
+                    estado: cocheEditar.estado,
+                })
+                .eq("id_coche", cocheEditar.id_coche);
+
+            if (error) throw error;
+
+            setMostrarModalEdicion(false);
+            cargarCoches();
+
             setToast({
                 mostrar: true,
-                mensaje: "Error al actualizar vehículo",
+                mensaje: "Estado actualizado",
+                tipo: "exito",
+            });
+
+        } catch (err) {
+            console.log(err);
+            setToast({
+                mostrar: true,
+                mensaje: "Error al actualizar",
                 tipo: "error",
             });
-            return;
         }
-
-        setMostrarModalEdicion(false);
-        cargarCoches();
-
-        setToast({
-            mostrar: true,
-            mensaje: "Vehículo actualizado",
-            tipo: "exito",
-        });
     };
 
-    // 📌 ELIMINAR
+    // =========================
+    // ELIMINAR
+    // =========================
     const eliminarCoche = async () => {
+
         const { error } = await supabase
             .from("coche")
             .delete()
             .eq("id_coche", cocheAEliminar.id_coche);
 
         if (error) {
-            setToast({
-                mostrar: true,
-                mensaje: "Error al eliminar vehículo",
-                tipo: "error",
-            });
+            setToast({ mostrar: true, mensaje: "Error al eliminar", tipo: "error" });
             return;
         }
 
         setMostrarModalEliminacion(false);
         cargarCoches();
 
-        setToast({
-            mostrar: true,
-            mensaje: "Vehículo eliminado",
-            tipo: "exito",
-        });
+        setToast({ mostrar: true, mensaje: "Eliminado", tipo: "exito" });
     };
 
-    // 📌 MODALES
-    const abrirModalEdicion = (coche) => {
-        setCocheEditar(coche);
-        setMostrarModalEdicion(true);
-    };
-
-    const abrirModalEliminacion = (coche) => {
-        setCocheAEliminar(coche);
-        setMostrarModalEliminacion(true);
-    };
-
+    // =========================
+    // UI
+    // =========================
     return (
         <Container className="mt-3">
+
             <Row className="align-items-center mb-3">
                 <Col>
                     <h3>
-                        <i className="bi bi-car-front me-2"></i> Vehículos
+                        <i className="bi bi-car-front-fill me-2"></i>
+                        Vehículos
                     </h3>
                 </Col>
+
                 <Col className="text-end">
                     <Button onClick={() => setMostrarModal(true)}>
+                        <i className="bi bi-plus-circle me-2"></i>
                         Nuevo Vehículo
                     </Button>
                 </Col>
@@ -217,24 +262,39 @@ const Coches = () => {
 
             <hr />
 
+            <Row className="mb-4">
+                <Col md={5}>
+                    <CuadroBusquedas
+                        textoBusqueda={textoBusqueda}
+                        manejarCambioBusqueda={(e) =>
+                            setTextoBusqueda(e.target.value)
+                        }
+                    />
+                </Col>
+            </Row>
+
             {cargando ? (
-                <Row className="text-center">
-                    <Spinner animation="border" />
-                </Row>
+                <Spinner animation="border" />
             ) : (
                 <TablaCoche
-                    coches={coches}
-                    abrirModalEdicion={abrirModalEdicion}
-                    abrirModalEliminacion={abrirModalEliminacion}
+                    coches={cochesFiltrados}
+                    abrirModalEdicion={(c) => {
+                        setCocheEditar(c);
+                        setMostrarModalEdicion(true);
+                    }}
+                    abrirModalEliminacion={(c) => {
+                        setCocheAEliminar(c);
+                        setMostrarModalEliminacion(true);
+                    }}
                 />
             )}
 
-            {/* MODALES */}
             <ModalRegistroCoche
                 mostrarModal={mostrarModal}
                 setMostrarModal={setMostrarModal}
                 nuevoCoche={nuevoCoche}
                 manejoCambioInput={manejoCambioInput}
+                manejoCambioArchivo={manejoCambioArchivo}
                 agregarCoche={agregarCoche}
             />
 
@@ -250,7 +310,7 @@ const Coches = () => {
                 mostrarModalEliminacion={mostrarModalEliminacion}
                 setMostrarModalEliminacion={setMostrarModalEliminacion}
                 eliminarCoche={eliminarCoche}
-                coche={cocheAEliminar}
+                cocheAEliminar={cocheAEliminar}
             />
 
             <NotificacionOperacion
@@ -259,6 +319,7 @@ const Coches = () => {
                 tipo={toast.tipo}
                 onCerrar={() => setToast({ ...toast, mostrar: false })}
             />
+
         </Container>
     );
 };

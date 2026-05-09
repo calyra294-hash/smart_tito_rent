@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Button } from "react-bootstrap";
+import { Table, Button, Image } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const TablaCoche = ({
@@ -8,14 +8,17 @@ const TablaCoche = ({
     abrirModalEliminacion,
 }) => {
 
-    // 📌 Formato limpio DATE
+    // 📌 FORMATEAR FECHA
     const formatearFecha = (fecha) => {
+
         if (!fecha) return "-";
-        return fecha;
+
+        return new Date(fecha).toLocaleDateString("es-NI");
     };
 
-    // 💰 Formato moneda
+    // 📌 FORMATEAR MONEDA
     const formatearMoneda = (valor) => {
+
         if (!valor) return "C$ 0.00";
 
         return Number(valor).toLocaleString("es-NI", {
@@ -26,83 +29,199 @@ const TablaCoche = ({
 
     return (
         <>
+
             {!coches || coches.length === 0 ? (
+
                 <div className="text-center">
                     <h5>No hay vehículos registrados</h5>
                 </div>
+
             ) : (
-                <Table striped borderless hover responsive size="sm">
-                    <thead>
+
+                <Table
+                    striped
+                    hover
+                    responsive
+                    className="align-middle"
+                >
+
+                    <thead className="table-light">
+
                         <tr>
+
                             <th>#</th>
+
+                            <th>Imagen</th>
+
                             <th>Marca</th>
+
                             <th>Modelo</th>
+
                             <th>Año</th>
+
                             <th>Placa</th>
-                            <th className="d-none d-md-table-cell">Color</th>
+
+                            <th className="d-none d-md-table-cell">
+                                Color
+                            </th>
+
                             <th>Valor/Día</th>
+
                             <th>Estado</th>
-                            <th>Fecha Registro</th>
-                            <th className="text-center">Acciones</th>
+
+                            <th className="d-none d-lg-table-cell">
+                                Fecha Registro
+                            </th>
+
+                            <th className="text-center">
+                                Acciones
+                            </th>
+
                         </tr>
+
                     </thead>
 
                     <tbody>
+
                         {coches.map((coche) => (
+
                             <tr key={coche.id_coche}>
+
                                 <td>{coche.id_coche}</td>
+
+                                {/* 📌 IMAGEN */}
+                                <td>
+
+                                    {coche.url_imagen ? (
+
+                                        <Image
+                                            src={coche.url_imagen}
+                                            rounded
+                                            width={70}
+                                            height={50}
+                                            style={{
+                                                objectFit: "cover",
+                                            }}
+                                        />
+
+                                    ) : (
+
+                                        <div
+                                            className="
+                                                bg-light
+                                                rounded
+                                                d-flex
+                                                justify-content-center
+                                                align-items-center
+                                            "
+                                            style={{
+                                                width: "70px",
+                                                height: "50px",
+                                            }}
+                                        >
+
+                                            <i
+                                                className="
+                                                    bi bi-car-front
+                                                    text-secondary
+                                                "
+                                            ></i>
+
+                                        </div>
+
+                                    )}
+
+                                </td>
+
                                 <td>{coche.marca}</td>
+
                                 <td>{coche.modelo}</td>
+
                                 <td>{coche.anio}</td>
+
                                 <td>{coche.placa}</td>
 
                                 <td className="d-none d-md-table-cell">
                                     {coche.color}
                                 </td>
 
-                                {/* 💰 VALOR CON MONEDA */}
-                                <td>{formatearMoneda(coche.valor_dia)}</td>
-
+                                {/* 💰 VALOR */}
                                 <td>
+                                    {formatearMoneda(
+                                        coche.valor_dia
+                                    )}
+                                </td>
+
+                                {/* 📌 ESTADO */}
+                                <td>
+
                                     <span
-                                        className={`badge ${
-                                            coche.estado === "Disponible"
+                                        className={`badge px-3 py-2 ${
+                                            coche.estado ===
+                                            "Disponible"
                                                 ? "bg-success"
-                                                : coche.estado === "En Alquiler"
+                                                : coche.estado ===
+                                                  "En Alquiler"
                                                 ? "bg-danger"
                                                 : "bg-warning text-dark"
                                         }`}
                                     >
+
                                         {coche.estado}
+
                                     </span>
+
                                 </td>
 
                                 {/* 📅 FECHA */}
-                                <td>{formatearFecha(coche.fecha_registro)}</td>
+                                <td className="d-none d-lg-table-cell">
 
+                                    {formatearFecha(
+                                        coche.fecha_registro
+                                    )}
+
+                                </td>
+
+                                {/* 📌 BOTONES */}
                                 <td className="text-center">
+
                                     <Button
                                         variant="outline-warning"
                                         size="sm"
-                                        className="m-1"
-                                        onClick={() => abrirModalEdicion(coche)}
+                                        className="me-1"
+                                        onClick={() =>
+                                            abrirModalEdicion(coche)
+                                        }
                                     >
+
                                         <i className="bi bi-pencil"></i>
+
                                     </Button>
 
                                     <Button
                                         variant="outline-danger"
                                         size="sm"
-                                        onClick={() => abrirModalEliminacion(coche)}
+                                        onClick={() =>
+                                            abrirModalEliminacion(coche)
+                                        }
                                     >
+
                                         <i className="bi bi-trash"></i>
+
                                     </Button>
+
                                 </td>
+
                             </tr>
+
                         ))}
+
                     </tbody>
+
                 </Table>
+
             )}
+
         </>
     );
 };

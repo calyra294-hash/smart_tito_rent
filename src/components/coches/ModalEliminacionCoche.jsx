@@ -7,6 +7,7 @@ const ModalEliminacionCoche = ({
     cocheAEliminar,
     eliminarCoche,
 }) => {
+
     const [deshabilitado, setDeshabilitado] = useState(false);
 
     const handleEliminar = async () => {
@@ -14,12 +15,6 @@ const ModalEliminacionCoche = ({
         setDeshabilitado(true);
         await eliminarCoche();
         setDeshabilitado(false);
-    };
-
-    // 📌 Formato SOLO DATE (sin hora)
-    const formatearFecha = (fecha) => {
-        if (!fecha) return "Sin registro";
-        return fecha; // ya viene como YYYY-MM-DD
     };
 
     return (
@@ -30,29 +25,42 @@ const ModalEliminacionCoche = ({
             keyboard={false}
             centered
         >
-            <Modal.Header closeButton>
-                <Modal.Title>Confirmar Eliminación</Modal.Title>
+
+            <Modal.Header closeButton className="bg-danger text-white">
+                <Modal.Title>
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    Confirmar Eliminación
+                </Modal.Title>
             </Modal.Header>
 
-            <Modal.Body>
-                ¿Estás seguro de eliminar el vehículo "
-                <strong>
-                    {cocheAEliminar?.marca} {cocheAEliminar?.modelo}
-                </strong>
-                " con placa "
-                <strong>{cocheAEliminar?.placa}</strong>"?
+            <Modal.Body className="text-center">
 
-                <br /><br />
+                <i
+                    className="bi bi-trash3-fill text-danger"
+                    style={{ fontSize: "40px" }}
+                ></i>
+
+                <p className="mt-3">
+                    ¿Seguro que deseas eliminar este vehículo?
+                </p>
+
+                <h5 className="text-danger">
+                    {cocheAEliminar?.marca} {cocheAEliminar?.modelo}
+                </h5>
+
+                <p>
+                    Placa: <strong>{cocheAEliminar?.placa}</strong>
+                </p>
 
                 <small className="text-muted">
                     Fecha de registro:{" "}
-                    <strong>
-                        {formatearFecha(cocheAEliminar?.fecha_registro)}
-                    </strong>
+                    <strong>{cocheAEliminar?.fecha_registro}</strong>
                 </small>
+
             </Modal.Body>
 
             <Modal.Footer>
+
                 <Button
                     variant="secondary"
                     onClick={() => setMostrarModalEliminacion(false)}
@@ -65,9 +73,12 @@ const ModalEliminacionCoche = ({
                     onClick={handleEliminar}
                     disabled={deshabilitado}
                 >
+                    <i className="bi bi-trash me-1"></i>
                     Eliminar
                 </Button>
+
             </Modal.Footer>
+
         </Modal>
     );
 };
