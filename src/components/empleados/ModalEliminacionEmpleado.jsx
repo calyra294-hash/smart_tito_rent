@@ -13,9 +13,7 @@ const ModalEliminacionEmpleado = ({
         if (deshabilitado) return;
 
         setDeshabilitado(true);
-
         await eliminarEmpleado();
-
         setDeshabilitado(false);
     };
 
@@ -27,34 +25,42 @@ const ModalEliminacionEmpleado = ({
             keyboard={false}
             centered
         >
-            <Modal.Header closeButton>
-                <Modal.Title>Eliminar Empleado</Modal.Title>
+
+            <Modal.Header closeButton className="bg-danger text-white">
+                <Modal.Title>
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    Eliminar Empleado
+                </Modal.Title>
             </Modal.Header>
 
-            <Modal.Body>
-                ¿Estás seguro que deseas eliminar al empleado?
+            <Modal.Body className="text-center">
 
-                <br /><br />
+                <i
+                    className="bi bi-person-x-fill text-danger"
+                    style={{ fontSize: "45px" }}
+                ></i>
 
-                <strong>
+                <p className="mt-3">
+                    ¿Seguro que deseas eliminar este empleado?
+                </p>
+
+                <h5 className="text-danger">
                     {empleadoAEliminar?.primer_nombre}{" "}
                     {empleadoAEliminar?.primer_apellido}
-                </strong>
+                </h5>
 
-                <br />
+                <p>
+                    Rol: <strong>{empleadoAEliminar?.rol}</strong>
+                </p>
 
-                <small className="text-muted">
-                    Rol: {empleadoAEliminar?.rol}
-                </small>
+                <p>
+                    Cédula: <strong>{empleadoAEliminar?.cedula}</strong>
+                </p>
 
-                <br />
-
-                <small className="text-muted">
-                    Cédula: {empleadoAEliminar?.cedula}
-                </small>
             </Modal.Body>
 
             <Modal.Footer>
+
                 <Button
                     variant="secondary"
                     onClick={() => setMostrarModalEliminacion(false)}
@@ -68,9 +74,12 @@ const ModalEliminacionEmpleado = ({
                     onClick={handleEliminar}
                     disabled={deshabilitado}
                 >
+                    <i className="bi bi-trash me-2"></i>
                     Eliminar
                 </Button>
+
             </Modal.Footer>
+
         </Modal>
     );
 };

@@ -174,6 +174,7 @@ const ModalRegistroCoche = ({
                         deshabilitado
                     }
                 >
+                    <i className="bi bi-save me-2"></i>
                     Guardar
                 </Button>
 

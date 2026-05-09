@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Form, Button } from "react-bootstrap";
+import { Modal, Form, Button, Row, Col } from "react-bootstrap";
 
 const ModalRegistroEmpleado = ({
     mostrarModal,
@@ -14,9 +14,7 @@ const ModalRegistroEmpleado = ({
         if (deshabilitado) return;
 
         setDeshabilitado(true);
-
         await agregarEmpleado();
-
         setDeshabilitado(false);
     };
 
@@ -29,7 +27,8 @@ const ModalRegistroEmpleado = ({
             centered
         >
             <Modal.Header closeButton>
-                <Modal.Title>Registrar Empleado</Modal.Title>
+                <Modal.Title>
+                    Registrar Empleado</Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
@@ -50,49 +49,86 @@ const ModalRegistroEmpleado = ({
                         </Form.Select>
                     </Form.Group>
 
-                    {/* PRIMER NOMBRE */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Primer Nombre</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="primer_nombre"
-                            value={nuevoEmpleado.primer_nombre}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
+                    {/* NOMBRES */}
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Primer Nombre</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="primer_nombre"
+                                    value={nuevoEmpleado.primer_nombre}
+                                    onChange={manejoCambioInput}
+                                />
+                            </Form.Group>
+                        </Col>
 
-                    {/* SEGUNDO NOMBRE */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Segundo Nombre</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="segundo_nombre"
-                            value={nuevoEmpleado.segundo_nombre}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Segundo Nombre</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="segundo_nombre"
+                                    value={nuevoEmpleado.segundo_nombre}
+                                    onChange={manejoCambioInput}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
 
-                    {/* PRIMER APELLIDO */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Primer Apellido</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="primer_apellido"
-                            value={nuevoEmpleado.primer_apellido}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
+                    {/* APELLIDOS */}
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Primer Apellido</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="primer_apellido"
+                                    value={nuevoEmpleado.primer_apellido}
+                                    onChange={manejoCambioInput}
+                                />
+                            </Form.Group>
+                        </Col>
 
-                    {/* SEGUNDO APELLIDO */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Segundo Apellido</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="segundo_apellido"
-                            value={nuevoEmpleado.segundo_apellido}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Segundo Apellido</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="segundo_apellido"
+                                    value={nuevoEmpleado.segundo_apellido}
+                                    onChange={manejoCambioInput}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+
+                    {/* CONTACTO */}
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Email</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="email"
+                                    value={nuevoEmpleado.email}
+                                    onChange={manejoCambioInput}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Cédula</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="cedula"
+                                    value={nuevoEmpleado.cedula}
+                                    onChange={manejoCambioInput}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
 
                     {/* DIRECCION */}
                     <Form.Group className="mb-3">
@@ -105,49 +141,32 @@ const ModalRegistroEmpleado = ({
                         />
                     </Form.Group>
 
-                    {/* EMAIL */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Email</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="email"
-                            value={nuevoEmpleado.email}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
+                    {/* PASSWORD Y FECHA */}
+                    <Row>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Contraseña</Form.Label>
+                                <Form.Control
+                                    type="password"
+                                    name="contrasena"
+                                    value={nuevoEmpleado.contrasena}
+                                    onChange={manejoCambioInput}
+                                />
+                            </Form.Group>
+                        </Col>
 
-                    {/* CEDULA */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Cédula</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="cedula"
-                            value={nuevoEmpleado.cedula}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
-
-                    {/* CONTRASEÑA */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Contraseña</Form.Label>
-                        <Form.Control
-                            type="password"
-                            name="contrasena"
-                            value={nuevoEmpleado.contrasena}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
-
-                    {/* FECHA CONTRATACION */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Fecha de Contratación</Form.Label>
-                        <Form.Control
-                            type="date"
-                            name="fecha_contratacion"
-                            value={nuevoEmpleado.fecha_contratacion}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Fecha de Contratación</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    name="fecha_contratacion"
+                                    value={nuevoEmpleado.fecha_contratacion}
+                                    onChange={manejoCambioInput}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
 
                 </Form>
             </Modal.Body>
@@ -175,6 +194,7 @@ const ModalRegistroEmpleado = ({
                         !nuevoEmpleado.fecha_contratacion
                     }
                 >
+                    <i className="bi bi-save me-2"></i>
                     Guardar
                 </Button>
             </Modal.Footer>

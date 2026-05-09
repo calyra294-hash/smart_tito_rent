@@ -179,6 +179,7 @@ const ModalEdicionCoche = ({
                     onClick={handleActualizar}
                     disabled={deshabilitado}
                 >
+                    <i className="bi bi-pencil-square me-2"></i>
                     Actualizar
                 </Button>
 
