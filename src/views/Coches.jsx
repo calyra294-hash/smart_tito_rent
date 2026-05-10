@@ -269,6 +269,8 @@ const Coches = () => {
                         manejarCambioBusqueda={(e) =>
                             setTextoBusqueda(e.target.value)
                         }
+                        
+    placeholder="Buscar Vehiculo..."
                     />
                 </Col>
             </Row>

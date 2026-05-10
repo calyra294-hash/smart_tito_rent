@@ -4,13 +4,14 @@ import { Form } from "react-bootstrap";
 const CuadroBusquedas = ({
     textoBusqueda,
     manejarCambioBusqueda,
+    placeholder = "Buscar..."
 }) => {
 
     return (
 
         <Form.Control
             type="text"
-            placeholder="Buscar vehículo..."
+            placeholder={placeholder}
             value={textoBusqueda}
             onChange={manejarCambioBusqueda}
         />

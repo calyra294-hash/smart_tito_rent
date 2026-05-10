@@ -8,6 +8,7 @@ import ModalEliminacionAlquiler from "../components/alquileres/ModalEliminacionA
 import ModalDetalleAlquiler from "../components/alquileres/ModalDetalleAlquiler";
 import TablaAlquileres from "../components/alquileres/TablaAlquileres";
 
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
 const Alquileres = () => {
@@ -24,10 +25,20 @@ const Alquileres = () => {
         fecha_inicio: "",
         fecha_fin: "",
         estado: "En espera",
+
+        id_usuario: "",
+        id_coche: "",
+        precio_total: "",
     });
 
     const [alquileres, setAlquileres] = useState([]);
+    const [alquileresFiltrados, setAlquileresFiltrados] = useState([]);
+    const [textoBusqueda, setTextoBusqueda] = useState("");
+
     const [cargando, setCargando] = useState(true);
+
+    const [usuarios, setUsuarios] = useState([]);
+    const [coches, setCoches] = useState([]);
 
     const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
     const [alquilerAEliminar, setAlquilerAEliminar] = useState(null);
@@ -65,6 +76,7 @@ const Alquileres = () => {
             if (error) throw error;
 
             setAlquileres(data || []);
+            setAlquileresFiltrados(data || []);
 
         } catch (error) {
 
@@ -82,9 +94,53 @@ const Alquileres = () => {
         }
     };
 
+    // =========================
+    // CARGAR USUARIOS Y COCHES
+    // =========================
+    const cargarDatos = async () => {
+
+        const { data: usuariosData } = await supabase
+            .from("usuario")
+            .select("*");
+
+        const { data: cochesData } = await supabase
+            .from("coche")
+            .select("*")
+            .eq("estado", "Disponible");
+
+        setUsuarios(usuariosData || []);
+        setCoches(cochesData || []);
+    };
+
     useEffect(() => {
+
         cargarAlquileres();
+        cargarDatos();
+
     }, []);
+
+    // =========================
+    // FILTRO BUSQUEDA
+    // =========================
+    useEffect(() => {
+
+        const texto = textoBusqueda.toLowerCase();
+
+        setAlquileresFiltrados(
+            alquileres.filter((a) =>
+                [
+                    a.estado,
+                    a.fecha_inicio,
+                    a.fecha_fin,
+                    String(a.id_alquiler),
+                ]
+                    .some((campo) =>
+                        campo?.toLowerCase().includes(texto)
+                    )
+            )
+        );
+
+    }, [textoBusqueda, alquileres]);
 
     // =========================
     // INPUTS REGISTRO
@@ -122,7 +178,10 @@ const Alquileres = () => {
             if (
                 !nuevoAlquiler.fecha_inicio ||
                 !nuevoAlquiler.fecha_fin ||
-                !nuevoAlquiler.estado
+                !nuevoAlquiler.estado ||
+                !nuevoAlquiler.id_usuario ||
+                !nuevoAlquiler.id_coche ||
+                !nuevoAlquiler.precio_total
             ) {
 
                 setToast({
@@ -134,7 +193,7 @@ const Alquileres = () => {
                 return;
             }
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from("alquiler")
                 .insert([
                     {
@@ -142,9 +201,32 @@ const Alquileres = () => {
                         fecha_fin: nuevoAlquiler.fecha_fin,
                         estado: nuevoAlquiler.estado,
                     },
-                ]);
+                ])
+                .select();
 
             if (error) throw error;
+
+            const idAlquiler = data[0].id_alquiler;
+
+            const { error: errorDetalle } = await supabase
+                .from("detalle_alquiler")
+                .insert([
+                    {
+                        id_alquiler: idAlquiler,
+                        id_usuario: nuevoAlquiler.id_usuario,
+                        id_coche: nuevoAlquiler.id_coche,
+                        precio_total: nuevoAlquiler.precio_total,
+                    },
+                ]);
+
+            if (errorDetalle) throw errorDetalle;
+
+            await supabase
+                .from("coche")
+                .update({
+                    estado: "En Alquiler",
+                })
+                .eq("id_coche", nuevoAlquiler.id_coche);
 
             setMostrarModal(false);
 
@@ -152,9 +234,14 @@ const Alquileres = () => {
                 fecha_inicio: "",
                 fecha_fin: "",
                 estado: "En espera",
+
+                id_usuario: "",
+                id_coche: "",
+                precio_total: "",
             });
 
             cargarAlquileres();
+            cargarDatos();
 
             setToast({
                 mostrar: true,
@@ -222,6 +309,11 @@ const Alquileres = () => {
         try {
 
             if (!alquilerAEliminar?.id_alquiler) return;
+
+            await supabase
+                .from("detalle_alquiler")
+                .delete()
+                .eq("id_alquiler", alquilerAEliminar.id_alquiler);
 
             const { error } = await supabase
                 .from("alquiler")
@@ -326,6 +418,22 @@ const Alquileres = () => {
 
             <hr />
 
+            <Row className="mb-4">
+
+                <Col md={5}>
+
+                    <CuadroBusquedas
+                        textoBusqueda={textoBusqueda}
+                        manejarCambioBusqueda={(e) =>
+                            setTextoBusqueda(e.target.value)
+                        }
+                        placeholder="Buscar alquiler..."
+                    />
+
+                </Col>
+
+            </Row>
+
             {cargando ? (
 
                 <div className="text-center">
@@ -335,7 +443,7 @@ const Alquileres = () => {
             ) : (
 
                 <TablaAlquileres
-                    alquileres={alquileres}
+                    alquileres={alquileresFiltrados}
                     abrirModalEdicion={abrirModalEdicion}
                     abrirModalEliminacion={abrirModalEliminacion}
                     verDetalleAlquiler={verDetalleAlquiler}
@@ -343,16 +451,16 @@ const Alquileres = () => {
 
             )}
 
-            {/* MODAL REGISTRO */}
             <ModalRegistroAlquiler
                 mostrarModal={mostrarModal}
                 setMostrarModal={setMostrarModal}
                 nuevoAlquiler={nuevoAlquiler}
                 manejoCambioInput={manejoCambioInput}
                 agregarAlquiler={agregarAlquiler}
+                usuarios={usuarios}
+                coches={coches}
             />
 
-            {/* MODAL EDICION */}
             <ModalEdicionAlquiler
                 mostrarModalEdicion={mostrarModalEdicion}
                 setMostrarModalEdicion={setMostrarModalEdicion}
@@ -361,7 +469,6 @@ const Alquileres = () => {
                 actualizarAlquiler={actualizarAlquiler}
             />
 
-            {/* MODAL ELIMINAR */}
             <ModalEliminacionAlquiler
                 mostrarModalEliminacion={mostrarModalEliminacion}
                 setMostrarModalEliminacion={setMostrarModalEliminacion}
@@ -369,14 +476,12 @@ const Alquileres = () => {
                 alquilerAEliminar={alquilerAEliminar}
             />
 
-            {/* MODAL DETALLE */}
             <ModalDetalleAlquiler
                 mostrarModalDetalle={mostrarModalDetalle}
                 setMostrarModalDetalle={setMostrarModalDetalle}
                 detalleAlquiler={detalleAlquiler}
             />
 
-            {/* TOAST */}
             <NotificacionOperacion
                 mostrar={toast.mostrar}
                 mensaje={toast.mensaje}
