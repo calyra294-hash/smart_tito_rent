@@ -6,82 +6,152 @@ const TablaAlquileres = ({
     alquileres,
     abrirModalEdicion,
     abrirModalEliminacion,
+    verDetalleAlquiler,
 }) => {
+
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (alquileres && alquileres.length > 0) {
+
+        if (alquileres) {
             setLoading(false);
-        } else {
-            setLoading(true);
         }
+
     }, [alquileres]);
 
-    // 🔥 función para colores del estado
+    // 🔥 COLORES ESTADO
     const obtenerColorEstado = (estado) => {
+
         if (estado === "En curso") return "success";
+
         if (estado === "Finalizado") return "primary";
+
         if (estado === "En espera") return "warning";
-        return "danger"; // Cancelado
+
+        return "danger";
     };
 
     return (
         <>
             {loading ? (
+
                 <div className="text-center">
+
                     <h4>Cargando alquileres...</h4>
-                    <Spinner animation="border" variant="success" role="status" />
+
+                    <Spinner
+                        animation="border"
+                        variant="success"
+                    />
+
                 </div>
+
             ) : (
-                <Table striped borderless hover responsive size="sm">
+
+                <Table
+                    striped
+                    borderless
+                    hover
+                    responsive
+                    size="sm"
+                >
+
                     <thead>
+
                         <tr>
+
                             <th>#</th>
+
                             <th>Fecha Inicio</th>
-                            <th className="d-none d-md-table-cell">Fecha Fin</th>
-                            {/* 🔥 NUEVA COLUMNA */}
+
+                            <th className="d-none d-md-table-cell">
+                                Fecha Fin
+                            </th>
+
                             <th>Estado</th>
-                            <th className="text-center">Acciones</th>
+
+                            <th className="text-center">
+                                Acciones
+                            </th>
+
                         </tr>
+
                     </thead>
+
                     <tbody>
+
                         {alquileres.map((alquiler) => (
+
                             <tr key={alquiler.id_alquiler}>
-                                <td>{alquiler.id_alquiler}</td>
-                                <td>{alquiler.fecha_inicio}</td>
+
+                                <td>
+                                    {alquiler.id_alquiler}
+                                </td>
+
+                                <td>
+                                    {alquiler.fecha_inicio}
+                                </td>
+
                                 <td className="d-none d-md-table-cell">
                                     {alquiler.fecha_fin}
                                 </td>
 
-                                {/* 🔥 MOSTRAR ESTADO */}
                                 <td>
+
                                     <Badge bg={obtenerColorEstado(alquiler.estado)}>
                                         {alquiler.estado}
                                     </Badge>
+
                                 </td>
 
                                 <td className="text-center">
+
+                                    {/* 🔵 DETALLE */}
+                                    <Button
+                                        variant="outline-info"
+                                        size="sm"
+                                        className="m-1"
+                                        onClick={() =>
+                                            verDetalleAlquiler(alquiler.id_alquiler)
+                                        }
+                                    >
+                                        <i className="bi bi-eye"></i>
+                                    </Button>
+
+                                    {/* 🟡 EDITAR */}
                                     <Button
                                         variant="outline-warning"
                                         size="sm"
                                         className="m-1"
-                                        onClick={() => abrirModalEdicion(alquiler)}
+                                        onClick={() =>
+                                            abrirModalEdicion(alquiler)
+                                        }
                                     >
                                         <i className="bi bi-pencil"></i>
                                     </Button>
 
+                                    {/* 🔴 ELIMINAR */}
                                     <Button
                                         variant="outline-danger"
                                         size="sm"
-                                        onClick={() => abrirModalEliminacion(alquiler)}
+                                        className="m-1"
+                                        onClick={() =>
+                                            abrirModalEliminacion(alquiler)
+                                        }
                                     >
                                         <i className="bi bi-trash"></i>
                                     </Button>
+
                                 </td>
+
                             </tr>
+
                         ))}
+
                     </tbody>
+
                 </Table>
+
             )}
         </>
     );

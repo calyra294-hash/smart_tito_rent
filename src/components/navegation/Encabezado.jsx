@@ -102,19 +102,11 @@ const encabezado = () => {
                         </Nav.Link>
                         
                         <Nav.Link
-                            onClick={() => manejarNavegacion("/detalles_alquiler")}
+                            onClick={() => manejarNavegacion("/usuarios")}
                             className={mostrarMenu ? "color-texto-marca" : "text-white"}
                         >
                             {mostrarMenu ? <i className="bi-images me-2"></i> : null}
-                            <strong>Detalles_Alquiler</strong>
-                        </Nav.Link>
-
-                        <Nav.Link
-                            onClick={() => manejarNavegacion("/detalles_mantenimiento")}
-                            className={mostrarMenu ? "color-texto-marca" : "text-white"}
-                        >
-                            {mostrarMenu ? <i className="bi-images me-2"></i> : null}
-                            <strong>Detalles_Manteniemiento</strong>
+                            <strong>Usuarios</strong>
                         </Nav.Link>
 
                         <Nav.Link

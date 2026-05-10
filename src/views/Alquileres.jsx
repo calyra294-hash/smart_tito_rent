@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
+
 import ModalRegistroAlquiler from "../components/alquileres/ModalRegistroAlquiler";
 import ModalEdicionAlquiler from "../components/alquileres/ModalEdicionAlquiler";
 import ModalEliminacionAlquiler from "../components/alquileres/ModalEliminacionAlquiler";
+import ModalDetalleAlquiler from "../components/alquileres/ModalDetalleAlquiler";
 import TablaAlquileres from "../components/alquileres/TablaAlquileres";
-import TarjetaAlquiler from "../components/alquileres/TarjetaAlquiler";
+
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
 const Alquileres = () => {
-    const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "" });
-    const [mostrarModal, setMostrarModal] = useState(false);
 
+    const [toast, setToast] = useState({
+        mostrar: false,
+        mensaje: "",
+        tipo: "",
+    });
+
+    const [mostrarModal, setMostrarModal] = useState(false);
 
     const [nuevoAlquiler, setNuevoAlquiler] = useState({
         fecha_inicio: "",
@@ -27,7 +34,6 @@ const Alquileres = () => {
 
     const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
 
-
     const [alquilerEditar, setAlquilerEditar] = useState({
         id_alquiler: "",
         fecha_inicio: "",
@@ -35,31 +41,43 @@ const Alquileres = () => {
         estado: "",
     });
 
+    // =========================
+    // MODAL DETALLE
+    // =========================
+    const [mostrarModalDetalle, setMostrarModalDetalle] = useState(false);
+
+    const [detalleAlquiler, setDetalleAlquiler] = useState([]);
+
+    // =========================
+    // CARGAR ALQUILERES
+    // =========================
     const cargarAlquileres = async () => {
+
         try {
+
             setCargando(true);
+
             const { data, error } = await supabase
-                .from("alquileres")
+                .from("alquiler")
                 .select("*")
                 .order("id_alquiler", { ascending: true });
 
-            if (error) {
-                setToast({
-                    mostrar: true,
-                    mensaje: "Error al cargar alquileres.",
-                    tipo: "error",
-                });
-                return;
-            }
+            if (error) throw error;
 
             setAlquileres(data || []);
-        } catch (err) {
+
+        } catch (error) {
+
+            console.log(error);
+
             setToast({
                 mostrar: true,
-                mensaje: "Error inesperado.",
+                mensaje: "Error al cargar alquileres",
                 tipo: "error",
             });
+
         } finally {
+
             setCargando(false);
         }
     };
@@ -68,158 +86,264 @@ const Alquileres = () => {
         cargarAlquileres();
     }, []);
 
+    // =========================
+    // INPUTS REGISTRO
+    // =========================
     const manejoCambioInput = (e) => {
+
         const { name, value } = e.target;
+
         setNuevoAlquiler((prev) => ({
             ...prev,
             [name]: value,
         }));
     };
 
+    // =========================
+    // INPUTS EDICION
+    // =========================
     const manejoCambioInputEdicion = (e) => {
+
         const { name, value } = e.target;
+
         setAlquilerEditar((prev) => ({
             ...prev,
             [name]: value,
         }));
     };
 
+    // =========================
+    // REGISTRAR
+    // =========================
     const agregarAlquiler = async () => {
-        
-        if (
-            !nuevoAlquiler.fecha_inicio ||
-            !nuevoAlquiler.fecha_fin ||
-            !nuevoAlquiler.estado
-        ) {
-            setToast({
-                mostrar: true,
-                mensaje: "Debe llenar todos los campos.",
-                tipo: "advertencia",
+
+        try {
+
+            if (
+                !nuevoAlquiler.fecha_inicio ||
+                !nuevoAlquiler.fecha_fin ||
+                !nuevoAlquiler.estado
+            ) {
+
+                setToast({
+                    mostrar: true,
+                    mensaje: "Debe completar todos los campos",
+                    tipo: "advertencia",
+                });
+
+                return;
+            }
+
+            const { error } = await supabase
+                .from("alquiler")
+                .insert([
+                    {
+                        fecha_inicio: nuevoAlquiler.fecha_inicio,
+                        fecha_fin: nuevoAlquiler.fecha_fin,
+                        estado: nuevoAlquiler.estado,
+                    },
+                ]);
+
+            if (error) throw error;
+
+            setMostrarModal(false);
+
+            setNuevoAlquiler({
+                fecha_inicio: "",
+                fecha_fin: "",
+                estado: "En espera",
             });
-            return;
-        }
 
-        const { error } = await supabase
-            .from("alquileres")
-            .insert([nuevoAlquiler]);
+            cargarAlquileres();
 
-        if (error) {
             setToast({
                 mostrar: true,
-                mensaje: "Error al registrar alquiler.",
+                mensaje: "Alquiler registrado correctamente",
+                tipo: "exito",
+            });
+
+        } catch (error) {
+
+            console.log(error);
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al registrar alquiler",
                 tipo: "error",
             });
-            return;
         }
-
-        setToast({
-            mostrar: true,
-            mensaje: "Alquiler registrado exitosamente.",
-            tipo: "exito",
-        });
-
-        setMostrarModal(false);
-
-        setNuevoAlquiler({
-            fecha_inicio: "",
-            fecha_fin: "",
-            estado: "En espera",
-        });
-
-        cargarAlquileres();
     };
 
+    // =========================
+    // ACTUALIZAR
+    // =========================
     const actualizarAlquiler = async () => {
-        const { error } = await supabase
-            .from("alquileres")
-            .update({
-                fecha_inicio: alquilerEditar.fecha_inicio,
-                fecha_fin: alquilerEditar.fecha_fin,
-                estado: alquilerEditar.estado, 
-            })
-            .eq("id_alquiler", alquilerEditar.id_alquiler);
 
-        if (error) {
+        try {
+
+            const { error } = await supabase
+                .from("alquiler")
+                .update({
+                    fecha_inicio: alquilerEditar.fecha_inicio,
+                    fecha_fin: alquilerEditar.fecha_fin,
+                    estado: alquilerEditar.estado,
+                })
+                .eq("id_alquiler", alquilerEditar.id_alquiler);
+
+            if (error) throw error;
+
+            setMostrarModalEdicion(false);
+
+            cargarAlquileres();
+
             setToast({
                 mostrar: true,
-                mensaje: "Error al actualizar.",
+                mensaje: "Alquiler actualizado correctamente",
+                tipo: "exito",
+            });
+
+        } catch (error) {
+
+            console.log(error);
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al actualizar alquiler",
                 tipo: "error",
             });
-            return;
         }
-
-        setMostrarModalEdicion(false);
-        cargarAlquileres();
-
-        setToast({
-            mostrar: true,
-            mensaje: "Alquiler actualizado.",
-            tipo: "exito",
-        });
     };
 
+    // =========================
+    // ELIMINAR
+    // =========================
     const eliminarAlquiler = async () => {
-        const { error } = await supabase
-            .from("alquileres")
-            .delete()
-            .eq("id_alquiler", alquilerAEliminar.id_alquiler);
 
-        if (error) {
+        try {
+
+            if (!alquilerAEliminar?.id_alquiler) return;
+
+            const { error } = await supabase
+                .from("alquiler")
+                .delete()
+                .eq("id_alquiler", alquilerAEliminar.id_alquiler);
+
+            if (error) throw error;
+
+            setMostrarModalEliminacion(false);
+
+            cargarAlquileres();
+
             setToast({
                 mostrar: true,
-                mensaje: "Error al eliminar.",
+                mensaje: "Alquiler eliminado correctamente",
+                tipo: "exito",
+            });
+
+        } catch (error) {
+
+            console.log(error);
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al eliminar alquiler",
                 tipo: "error",
             });
-            return;
         }
-
-        setMostrarModalEliminacion(false);
-        cargarAlquileres();
-
-        setToast({
-            mostrar: true,
-            mensaje: "Alquiler eliminado.",
-            tipo: "exito",
-        });
     };
 
+    // =========================
+    // VER DETALLE ALQUILER
+    // =========================
+    const verDetalleAlquiler = async (id_alquiler) => {
+
+        try {
+
+            const { data, error } = await supabase
+                .from("detalle_alquiler")
+                .select("*")
+                .eq("id_alquiler", id_alquiler);
+
+            if (error) throw error;
+
+            setDetalleAlquiler(data || []);
+
+            setMostrarModalDetalle(true);
+
+        } catch (error) {
+
+            console.log(error);
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al cargar detalles",
+                tipo: "error",
+            });
+        }
+    };
+
+    // =========================
+    // ABRIR MODALES
+    // =========================
     const abrirModalEdicion = (alquiler) => {
+
         setAlquilerEditar(alquiler);
         setMostrarModalEdicion(true);
     };
 
     const abrirModalEliminacion = (alquiler) => {
+
         setAlquilerAEliminar(alquiler);
         setMostrarModalEliminacion(true);
     };
 
+    // =========================
+    // UI
+    // =========================
     return (
+
         <Container className="mt-3">
+
             <Row className="align-items-center mb-3">
+
                 <Col>
                     <h3>
-                        <i className="bi-calendar-check me-2"></i> Alquileres
+                        <i className="bi bi-calendar-check me-2"></i>
+                        Alquileres
                     </h3>
                 </Col>
+
                 <Col className="text-end">
+
                     <Button onClick={() => setMostrarModal(true)}>
+                        <i className="bi bi-plus-circle me-2"></i>
                         Nuevo Alquiler
                     </Button>
+
                 </Col>
+
             </Row>
 
             <hr />
 
-            {cargando && <Spinner animation="border" />}
+            {cargando ? (
 
-            {!cargando && (
+                <div className="text-center">
+                    <Spinner animation="border" />
+                </div>
+
+            ) : (
+
                 <TablaAlquileres
                     alquileres={alquileres}
                     abrirModalEdicion={abrirModalEdicion}
                     abrirModalEliminacion={abrirModalEliminacion}
+                    verDetalleAlquiler={verDetalleAlquiler}
                 />
+
             )}
 
+            {/* MODAL REGISTRO */}
             <ModalRegistroAlquiler
                 mostrarModal={mostrarModal}
                 setMostrarModal={setMostrarModal}
@@ -228,6 +352,7 @@ const Alquileres = () => {
                 agregarAlquiler={agregarAlquiler}
             />
 
+            {/* MODAL EDICION */}
             <ModalEdicionAlquiler
                 mostrarModalEdicion={mostrarModalEdicion}
                 setMostrarModalEdicion={setMostrarModalEdicion}
@@ -236,7 +361,7 @@ const Alquileres = () => {
                 actualizarAlquiler={actualizarAlquiler}
             />
 
-
+            {/* MODAL ELIMINAR */}
             <ModalEliminacionAlquiler
                 mostrarModalEliminacion={mostrarModalEliminacion}
                 setMostrarModalEliminacion={setMostrarModalEliminacion}
@@ -244,12 +369,26 @@ const Alquileres = () => {
                 alquilerAEliminar={alquilerAEliminar}
             />
 
+            {/* MODAL DETALLE */}
+            <ModalDetalleAlquiler
+                mostrarModalDetalle={mostrarModalDetalle}
+                setMostrarModalDetalle={setMostrarModalDetalle}
+                detalleAlquiler={detalleAlquiler}
+            />
+
+            {/* TOAST */}
             <NotificacionOperacion
                 mostrar={toast.mostrar}
                 mensaje={toast.mensaje}
                 tipo={toast.tipo}
-                onCerrar={() => setToast({ ...toast, mostrar: false })}
+                onCerrar={() =>
+                    setToast({
+                        ...toast,
+                        mostrar: false,
+                    })
+                }
             />
+
         </Container>
     );
 };
