@@ -7,6 +7,8 @@ const ModalRegistroMantenimiento = ({
     nuevoMantenimiento,
     manejoCambioInput,
     agregarMantenimiento,
+    coches,
+    empleados,
 }) => {
     const [deshabilitado, setDeshabilitado] = useState(false);
 
@@ -32,17 +34,52 @@ const ModalRegistroMantenimiento = ({
             <Modal.Body>
                 <Form>
 
-                    {/* DESCRIPCIÓN */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Descripción</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={2}
-                            name="descripcion"
-                            value={nuevoMantenimiento.descripcion}
-                            onChange={manejoCambioInput}
-                        />
-                    </Form.Group>
+                    {/* 1. COCHE (Reintegrado) */}
+        <Form.Group className="mb-3">
+            <Form.Label>Coche</Form.Label>
+            <Form.Select
+                name="id_coche"
+                value={nuevoMantenimiento.id_coche}
+                onChange={manejoCambioInput}
+            >
+               {coches.map((coche) => (
+    <option key={coche.id_coche} value={coche.id_coche}>
+        {/* Usamos marca, modelo y placa como dice la captura */}
+        {coche.marca} {coche.modelo} - {coche.placa}
+    </option>
+))}
+            </Form.Select>
+        </Form.Group>
+
+       {/* 2. EMPLEADO (Corregido) */}
+<Form.Group className="mb-3">
+    <Form.Label>Empleado</Form.Label>
+    <Form.Select
+        name="id_empleado"
+        value={nuevoMantenimiento.id_empleado}
+        onChange={manejoCambioInput}
+    >
+        <option value="">Seleccione un empleado</option>
+        {empleados.map((empleado) => (
+    <option key={empleado.id_empleado} value={empleado.id_empleado}>
+        {/* Cambiamos a los nombres de la captura: nombre1 y apellido1 */}
+        {empleado.nombre1} {empleado.apellido1}
+    </option>
+))}
+    </Form.Select>
+</Form.Group>
+
+        {/* 3. DESCRIPCIÓN (Lo que ya tenías en la captura) */}
+        <Form.Group className="mb-3">
+            <Form.Label>Descripción</Form.Label>
+            <Form.Control
+                as="textarea"
+                rows={2}
+                name="descripcion"
+                value={nuevoMantenimiento.descripcion}
+                onChange={manejoCambioInput}
+            />
+        </Form.Group>
 
                     {/* JUSTIFICACIÓN */}
                     <Form.Group className="mb-3">
@@ -106,6 +143,8 @@ const ModalRegistroMantenimiento = ({
                     onClick={handleRegistrar}
                     disabled={
                         deshabilitado ||
+                        !nuevoMantenimiento.id_coche ||
+                        !nuevoMantenimiento.id_empleado ||
                         !nuevoMantenimiento.descripcion ||
                         !nuevoMantenimiento.justificacion ||
                         !nuevoMantenimiento.fecha_inicio ||

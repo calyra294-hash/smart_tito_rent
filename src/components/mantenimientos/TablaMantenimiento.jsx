@@ -6,6 +6,7 @@ const TablaMantenimiento = ({
     mantenimientos,
     abrirModalEdicion,
     abrirModalEliminacion,
+    verDetalleMantenimiento,
 }) => {
     const [loading, setLoading] = useState(true);
 
@@ -64,9 +65,18 @@ const TablaMantenimiento = ({
                                         <Button
                                             variant="outline-danger"
                                             size="sm"
+                                            className="me-2"
                                             onClick={() => abrirModalEliminacion(m)}
                                         >
                                             <i className="bi bi-trash"></i>
+                                        </Button>
+
+                                        <Button
+                                            variant="outline-info"
+                                            size="sm"
+                                            onClick={() => verDetalleMantenimiento(m.id_mantenimiento)}
+                                        >
+                                            <i className="bi bi-eye"></i>
                                         </Button>
                                     </td>
                                 </tr>
