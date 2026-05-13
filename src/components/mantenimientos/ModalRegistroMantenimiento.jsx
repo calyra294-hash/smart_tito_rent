@@ -61,11 +61,11 @@ const ModalRegistroMantenimiento = ({
     >
         <option value="">Seleccione un empleado</option>
         {empleados.map((empleado) => (
-    <option key={empleado.id_empleado} value={empleado.id_empleado}>
-        {/* Cambiamos a los nombres de la captura: nombre1 y apellido1 */}
-        {empleado.nombre1} {empleado.apellido1}
-    </option>
-))}
+            <option key={empleado.id_empleado} value={empleado.id_empleado}>
+                {/* Usamos los nombres que tu base de datos tiene ahora */}
+                {empleado.primer_nombre} {empleado.primer_apellido}
+            </option>
+        ))}
     </Form.Select>
 </Form.Group>
 

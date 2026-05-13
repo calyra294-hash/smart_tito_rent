@@ -42,10 +42,11 @@ const Mantenimientos = () => {
         costo: "",
     });
 
-    // NUEVO: Función para cargar coches y empleados (faltaba en tu código)
+    // Carga inicial de listas para los selectores
     const cargarListas = async () => {
         const { data: c } = await supabase.from("coche").select("*");
-        const { data: e } = await supabase.from("empleado").select("*");
+        // CAMBIO: Se usa "empleados" (plural)
+        const { data: e } = await supabase.from("empleados").select("*");
         setCoches(c || []);
         setEmpleados(e || []);
     };
@@ -59,7 +60,7 @@ const Mantenimientos = () => {
                     *,
                     detalle_mantenimiento (
                         coche (*),
-                        empleado (*)
+                        empleados (*)
                     )
                 `);
             if (error) throw error;
@@ -87,57 +88,59 @@ const Mantenimientos = () => {
     };
 
     const agregarMantenimiento = async () => {
-    try {
-        // 1. Validación inicial
-        if (!nuevoMantenimiento.id_coche || !nuevoMantenimiento.id_empleado) {
-            setToast({ mostrar: true, mensaje: "Debes seleccionar un coche y un empleado", tipo: "error" });
-            return;
+        try {
+            if (!nuevoMantenimiento.id_coche || !nuevoMantenimiento.id_empleado) {
+                setToast({ mostrar: true, mensaje: "Debes seleccionar un coche y un empleado", tipo: "error" });
+                return;
+            }
+
+            // 1. Insertar Mantenimiento
+            const { data: mantData, error: mantError } = await supabase
+                .from("mantenimiento")
+                .insert([{
+                    descripcion: nuevoMantenimiento.descripcion,
+                    justificacion: nuevoMantenimiento.justificacion,
+                    fecha_inicio: nuevoMantenimiento.fecha_inicio,
+                    fecha_fin: nuevoMantenimiento.fecha_fin,
+                    costo: nuevoMantenimiento.costo,
+                }])
+                .select()
+                .single();
+
+            if (mantError) throw mantError;
+
+            // 2. Insertar Detalle (Relacionando con la tabla revertida)
+            const { error: detalleError } = await supabase
+                .from("detalle_mantenimiento")
+                .insert([{
+                    id_mantenimiento: mantData.id_mantenimiento,
+                    id_coche: nuevoMantenimiento.id_coche,
+                    id_empleado: nuevoMantenimiento.id_empleado,
+                    observaciones: "Mantenimiento inicializado",
+                    recomendaciones: "Pendiente",
+                    partes_cambiadas: "Ninguna"
+                }]);
+
+            if (detalleError) {
+                await supabase.from("mantenimiento").delete().eq("id_mantenimiento", mantData.id_mantenimiento);
+                throw detalleError;
+            }
+
+            setMostrarModal(false);
+            setToast({ mostrar: true, mensaje: "¡Mantenimiento registrado con éxito!", tipo: "exito" });
+            cargarMantenimientos();
+            
+            // Limpiar formulario
+            setNuevoMantenimiento({
+                descripcion: "", justificacion: "", fecha_inicio: "", 
+                fecha_fin: "", costo: "", id_coche: "", id_empleado: ""
+            });
+
+        } catch (error) {
+            console.error("Error completo:", error);
+            setToast({ mostrar: true, mensaje: "Error: " + error.message, tipo: "error" });
         }
-
-        // 2. Insertar en la tabla 'mantenimiento'
-        const { data: mantData, error: mantError } = await supabase
-            .from("mantenimiento")
-            .insert([{
-                descripcion: nuevoMantenimiento.descripcion,
-                justificacion: nuevoMantenimiento.justificacion,
-                fecha_inicio: nuevoMantenimiento.fecha_inicio,
-                fecha_fin: nuevoMantenimiento.fecha_fin,
-                costo: nuevoMantenimiento.costo,
-            }])
-            .select() // Esto es vital para obtener el ID generado
-            .single();
-
-        if (mantError) throw mantError;
-
-        // 3. Insertar en la tabla 'detalle_mantenimiento' usando el ID recién creado
-        // Nota: Verifica que los nombres de columnas coincidan con "Captura de pantalla 2026-05-12 114032_3.png"
-        const { error: detalleError } = await supabase
-            .from("detalle_mantenimiento")
-            .insert([{
-                id_mantenimiento: mantData.id_mantenimiento, // El ID de arriba
-                id_coche: nuevoMantenimiento.id_coche,
-                id_empleado: nuevoMantenimiento.id_empleado,
-                observaciones: "Mantenimiento inicializado",
-                recomendaciones: "Pendiente",
-                partes_cambiadas: "Ninguna"
-            }]);
-
-        if (detalleError) {
-            // Si falla el detalle, borramos el mantenimiento para no dejar datos huérfanos (opcional)
-            await supabase.from("mantenimiento").delete().eq("id_mantenimiento", mantData.id_mantenimiento);
-            throw detalleError;
-        }
-
-        // 4. Éxito
-        setMostrarModal(false);
-        setToast({ mostrar: true, mensaje: "Mantenimiento y detalle registrados!", tipo: "exito" });
-        cargarMantenimientos(); // Recargar la tabla principal
-
-    } catch (error) {
-        console.error("Error completo:", error);
-        setToast({ mostrar: true, mensaje: "Error al registrar: " + error.message, tipo: "error" });
-    }
-};
+    };
 
     const actualizarMantenimiento = async () => {
         try {
@@ -169,31 +172,32 @@ const Mantenimientos = () => {
         }
     };
 
+    // Función para ver el detalle técnico
     const verDetalle = async (id) => {
-    try {
-        const { data, error } = await supabase
-            .from("mantenimiento")
-            .select(`
-                *,
-                detalle_mantenimiento!id_mantenimiento (
-                    id_detalle_mantenimiento,
-                    observaciones,
-                    recomendaciones,
-                    partes_cambiadas,
-                    coche!id_coche (*),
-                    empleado!id_empleado (*)
-                )
-            `)
-            .eq("id_mantenimiento", id)
-            .single();
+        try {
+            const { data, error } = await supabase
+                .from("mantenimiento")
+                .select(`
+                    *,
+                    detalle_mantenimiento!id_mantenimiento (
+                        id_detalle_mantenimiento,
+                        observaciones,
+                        recomendaciones,
+                        partes_cambiadas,
+                        coche!id_coche (*),
+                        empleados!id_empleado (*)
+                    )
+                `)
+                .eq("id_mantenimiento", id)
+                .single();
 
-        if (error) throw error;
-        setDetalleMantenimiento(data);
-        setMostrarModalDetalle(true);
-    } catch (error) {
-        console.error("Error al obtener detalle:", error);
-    }
-};
+            if (error) throw error;
+            setDetalleMantenimiento(data);
+            setMostrarModalDetalle(true);
+        } catch (error) {
+            console.error("Error al obtener detalle:", error);
+        }
+    };
 
     const abrirModalEdicion = (m) => {
         setMantenimientoEditar(m);
@@ -228,6 +232,7 @@ const Mantenimientos = () => {
                     verDetalleMantenimiento={verDetalle}
                 />
             )}
+            
             <ModalRegistroMantenimiento
                 mostrarModal={mostrarModal}
                 setMostrarModal={setMostrarModal}
@@ -237,6 +242,7 @@ const Mantenimientos = () => {
                 coches={coches}
                 empleados={empleados}
             />
+
             <ModalEdicionMantenimiento
                 mostrarModalEdicion={mostrarModalEdicion}
                 setMostrarModalEdicion={setMostrarModalEdicion}
@@ -244,17 +250,20 @@ const Mantenimientos = () => {
                 manejoCambioInputEdicion={manejoCambioInputEdicion}
                 actualizarMantenimiento={actualizarMantenimiento}
             />
+
             <ModalEliminacionMantenimiento
                 mostrarModalEliminacion={mostrarModalEliminacion}
                 setMostrarModalEliminacion={setMostrarModalEliminacion}
                 eliminarMantenimiento={eliminarMantenimiento}
                 mantenimientoAEliminar={mantenimientoAEliminar}
             />
+
             <ModalDetalleMantenimiento
                 mostrarModalDetalle={mostrarModalDetalle}
                 setMostrarModalDetalle={setMostrarModalDetalle}
                 detalleMantenimiento={detalleMantenimiento}
             />
+
             <NotificacionOperacion
                 mostrar={toast.mostrar}
                 mensaje={toast.mensaje}
@@ -263,6 +272,6 @@ const Mantenimientos = () => {
             />
         </Container>
     );
-}; // <--- ESTA LLAVE CIERRA EL COMPONENTE (Estaba mal puesta arriba)
+};
 
 export default Mantenimientos;
