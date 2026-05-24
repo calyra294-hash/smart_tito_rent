@@ -24,6 +24,33 @@ const ModalRegistroAlquiler = ({
         setDeshabilitado(false);
     };
 
+    // =========================
+    // CAMBIO VEHÍCULO
+    // =========================
+    const manejarCambioCoche = (e) => {
+
+        const idCocheSeleccionado = e.target.value;
+
+        // buscar coche seleccionado
+        const cocheSeleccionado = coches.find(
+            (c) => String(c.id_coche) === String(idCocheSeleccionado)
+        );
+
+        // actualizar id_coche
+        manejoCambioInput(e);
+
+        // poner automáticamente el valor por día
+        if (cocheSeleccionado) {
+
+            manejoCambioInput({
+                target: {
+                    name: "precio_total",
+                    value: cocheSeleccionado.valor_dia,
+                },
+            });
+        }
+    };
+
     return (
 
         <Modal
@@ -50,10 +77,14 @@ const ModalRegistroAlquiler = ({
 
                     <Row>
 
+                        {/* FECHA INICIO */}
                         <Col md={6}>
+
                             <Form.Group className="mb-3">
 
-                                <Form.Label>Fecha Inicio</Form.Label>
+                                <Form.Label>
+                                    Fecha Inicio
+                                </Form.Label>
 
                                 <Form.Control
                                     type="date"
@@ -63,12 +94,17 @@ const ModalRegistroAlquiler = ({
                                 />
 
                             </Form.Group>
+
                         </Col>
 
+                        {/* FECHA FIN */}
                         <Col md={6}>
+
                             <Form.Group className="mb-3">
 
-                                <Form.Label>Fecha Fin</Form.Label>
+                                <Form.Label>
+                                    Fecha Fin
+                                </Form.Label>
 
                                 <Form.Control
                                     type="date"
@@ -78,6 +114,7 @@ const ModalRegistroAlquiler = ({
                                 />
 
                             </Form.Group>
+
                         </Col>
 
                     </Row>
@@ -85,7 +122,9 @@ const ModalRegistroAlquiler = ({
                     {/* USUARIO */}
                     <Form.Group className="mb-3">
 
-                        <Form.Label>Usuario</Form.Label>
+                        <Form.Label>
+                            Usuario
+                        </Form.Label>
 
                         <Form.Select
                             name="id_usuario"
@@ -112,15 +151,17 @@ const ModalRegistroAlquiler = ({
 
                     </Form.Group>
 
-                    {/* COCHE */}
+                    {/* VEHÍCULO */}
                     <Form.Group className="mb-3">
 
-                        <Form.Label>Vehículo</Form.Label>
+                        <Form.Label>
+                            Vehículo
+                        </Form.Label>
 
                         <Form.Select
                             name="id_coche"
                             value={nuevoAlquiler.id_coche || ""}
-                            onChange={manejoCambioInput}
+                            onChange={manejarCambioCoche}
                         >
 
                             <option value="">
@@ -145,21 +186,30 @@ const ModalRegistroAlquiler = ({
                     {/* PRECIO */}
                     <Form.Group className="mb-3">
 
-                        <Form.Label>Precio Total</Form.Label>
+                        <Form.Label>
+                            Precio Total
+                        </Form.Label>
 
                         <Form.Control
                             type="number"
                             name="precio_total"
                             value={nuevoAlquiler.precio_total || ""}
                             onChange={manejoCambioInput}
+                            readOnly
                         />
+
+                        <small className="text-muted">
+                            El precio se calcula automáticamente según el vehículo.
+                        </small>
 
                     </Form.Group>
 
                     {/* ESTADO */}
                     <Form.Group className="mb-3">
 
-                        <Form.Label>Estado</Form.Label>
+                        <Form.Label>
+                            Estado
+                        </Form.Label>
 
                         <Form.Select
                             name="estado"
@@ -172,11 +222,11 @@ const ModalRegistroAlquiler = ({
                             </option>
 
                             <option value="En espera">
-                                En espera
+                                En Espera
                             </option>
 
                             <option value="En curso">
-                                En curso
+                                En Curso
                             </option>
 
                             <option value="Finalizado">
@@ -205,7 +255,7 @@ const ModalRegistroAlquiler = ({
                 </Button>
 
                 <Button
-                    variant="primary"
+                    variant="danger"
                     onClick={handleRegistrar}
                     disabled={deshabilitado}
                 >

@@ -55,11 +55,13 @@ const Coches = () => {
 
         if (error) {
             console.log(error);
+
             setToast({
                 mostrar: true,
                 mensaje: "Error al cargar vehículos",
                 tipo: "error",
             });
+
             setCargando(false);
             return;
         }
@@ -77,25 +79,35 @@ const Coches = () => {
     // FILTRO
     // =========================
     useEffect(() => {
+
         const texto = textoBusqueda.toLowerCase();
 
         setCochesFiltrados(
             coches.filter((c) =>
                 [c.marca, c.modelo, c.placa, c.estado]
-                    .some((campo) => campo?.toLowerCase().includes(texto))
+                    .some((campo) =>
+                        campo?.toLowerCase().includes(texto)
+                    )
             )
         );
+
     }, [textoBusqueda, coches]);
 
     // =========================
     // INPUT REGISTRO
     // =========================
     const manejoCambioInput = (e) => {
+
         const { name, value } = e.target;
-        setNuevoCoche((prev) => ({ ...prev, [name]: value }));
+
+        setNuevoCoche((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
     };
 
     const manejoCambioArchivo = (e) => {
+
         setNuevoCoche((prev) => ({
             ...prev,
             archivo: e.target.files[0] || null,
@@ -103,9 +115,10 @@ const Coches = () => {
     };
 
     // =========================
-    // INPUT EDICION (SOLO ESTADO)
+    // INPUT EDICION
     // =========================
     const manejoCambioInputEdicion = (e) => {
+
         const { name, value } = e.target;
 
         setCocheEditar((prev) => ({
@@ -120,10 +133,13 @@ const Coches = () => {
     const agregarCoche = async () => {
 
         try {
+
             let urlImagen = "";
 
             if (nuevoCoche.archivo) {
-                const nombreArchivo = `${Date.now()}_${nuevoCoche.archivo.name}`;
+
+                const nombreArchivo =
+                    `${Date.now()}_${nuevoCoche.archivo.name}`;
 
                 const { error: uploadError } = await supabase.storage
                     .from("imagenes_coche")
@@ -138,17 +154,23 @@ const Coches = () => {
                 urlImagen = data.publicUrl;
             }
 
-            const { error } = await supabase.from("coche").insert([{
-                marca: nuevoCoche.marca,
-                modelo: nuevoCoche.modelo,
-                anio: Number(nuevoCoche.anio),
-                placa: nuevoCoche.placa,
-                color: nuevoCoche.color,
-                valor_dia: Number(nuevoCoche.valor_dia),
-                estado: nuevoCoche.estado,
-                fecha_registro: new Date().toISOString().split("T")[0],
-                url_imagen: urlImagen,
-            }]);
+            const { error } = await supabase
+                .from("coche")
+                .insert([
+                    {
+                        marca: nuevoCoche.marca,
+                        modelo: nuevoCoche.modelo,
+                        anio: Number(nuevoCoche.anio),
+                        placa: nuevoCoche.placa,
+                        color: nuevoCoche.color,
+                        valor_dia: Number(nuevoCoche.valor_dia),
+                        estado: nuevoCoche.estado,
+                        fecha_registro: new Date()
+                            .toISOString()
+                            .split("T")[0],
+                        url_imagen: urlImagen,
+                    },
+                ]);
 
             if (error) throw error;
 
@@ -174,7 +196,9 @@ const Coches = () => {
             });
 
         } catch (err) {
+
             console.log(err);
+
             setToast({
                 mostrar: true,
                 mensaje: "Error al registrar vehículo",
@@ -184,11 +208,12 @@ const Coches = () => {
     };
 
     // =========================
-    // ACTUALIZAR SOLO ESTADO
+    // ACTUALIZAR
     // =========================
     const actualizarCoche = async () => {
 
         try {
+
             const { error } = await supabase
                 .from("coche")
                 .update({
@@ -199,6 +224,7 @@ const Coches = () => {
             if (error) throw error;
 
             setMostrarModalEdicion(false);
+
             cargarCoches();
 
             setToast({
@@ -208,7 +234,9 @@ const Coches = () => {
             });
 
         } catch (err) {
+
             console.log(err);
+
             setToast({
                 mostrar: true,
                 mensaje: "Error al actualizar",
@@ -228,101 +256,145 @@ const Coches = () => {
             .eq("id_coche", cocheAEliminar.id_coche);
 
         if (error) {
-            setToast({ mostrar: true, mensaje: "Error al eliminar", tipo: "error" });
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al eliminar",
+                tipo: "error",
+            });
+
             return;
         }
 
         setMostrarModalEliminacion(false);
+
         cargarCoches();
 
-        setToast({ mostrar: true, mensaje: "Eliminado", tipo: "exito" });
+        setToast({
+            mostrar: true,
+            mensaje: "Eliminado",
+            tipo: "exito",
+        });
     };
 
     // =========================
     // UI
     // =========================
     return (
-        <Container className="mt-3">
 
-            <Row className="align-items-center mb-3">
-                <Col>
-                    <h3>
-                        <i className="bi bi-car-front-fill me-2"></i>
-                        Vehículos
-                    </h3>
-                </Col>
+        <div className="contenido-principal">
 
-                <Col className="text-end">
-                    <Button onClick={() => setMostrarModal(true)}>
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Nuevo Vehículo
-                    </Button>
-                </Col>
-            </Row>
+            <div className="contenedor-dashboard">
 
-            <hr />
+                <Container fluid>
 
-            <Row className="mb-4">
-                <Col md={5}>
-                    <CuadroBusquedas
-                        textoBusqueda={textoBusqueda}
-                        manejarCambioBusqueda={(e) =>
-                            setTextoBusqueda(e.target.value)
-                        }
-                        
-    placeholder="Buscar Vehiculo..."
+                    <Row className="align-items-center mb-3">
+
+                        <Col>
+                            <h3>
+                                <i className="bi bi-car-front-fill me-2 text-danger"></i>
+                                Vehículos
+                            </h3>
+                        </Col>
+
+                        <Col className="text-end">
+
+                            <Button
+                                variant="danger"
+                                className="rounded-pill px-4 shadow-sm"
+                                onClick={() => setMostrarModal(true)}
+                            >
+                                <i className="bi bi-plus-circle me-2"></i>
+                                Nuevo Vehículo
+                            </Button>
+
+                        </Col>
+
+                    </Row>
+
+                    <hr />
+
+                    <Row className="mb-4">
+
+                        <Col md={5}>
+
+                            <CuadroBusquedas
+                                textoBusqueda={textoBusqueda}
+                                manejarCambioBusqueda={(e) =>
+                                    setTextoBusqueda(e.target.value)
+                                }
+                                placeholder="Buscar Vehículo..."
+                            />
+
+                        </Col>
+
+                    </Row>
+
+                    {cargando ? (
+
+                        <div className="text-center py-5">
+                            <Spinner animation="border" />
+                        </div>
+
+                    ) : (
+
+                        <TablaCoche
+                            coches={cochesFiltrados}
+
+                            abrirModalEdicion={(c) => {
+                                setCocheEditar(c);
+                                setMostrarModalEdicion(true);
+                            }}
+
+                            abrirModalEliminacion={(c) => {
+                                setCocheAEliminar(c);
+                                setMostrarModalEliminacion(true);
+                            }}
+                        />
+
+                    )}
+
+                    <ModalRegistroCoche
+                        mostrarModal={mostrarModal}
+                        setMostrarModal={setMostrarModal}
+                        nuevoCoche={nuevoCoche}
+                        manejoCambioInput={manejoCambioInput}
+                        manejoCambioArchivo={manejoCambioArchivo}
+                        agregarCoche={agregarCoche}
                     />
-                </Col>
-            </Row>
 
-            {cargando ? (
-                <Spinner animation="border" />
-            ) : (
-                <TablaCoche
-                    coches={cochesFiltrados}
-                    abrirModalEdicion={(c) => {
-                        setCocheEditar(c);
-                        setMostrarModalEdicion(true);
-                    }}
-                    abrirModalEliminacion={(c) => {
-                        setCocheAEliminar(c);
-                        setMostrarModalEliminacion(true);
-                    }}
-                />
-            )}
+                    <ModalEdicionCoche
+                        mostrarModalEdicion={mostrarModalEdicion}
+                        setMostrarModalEdicion={setMostrarModalEdicion}
+                        cocheEditar={cocheEditar}
+                        manejoCambioInputEdicion={manejoCambioInputEdicion}
+                        actualizarCoche={actualizarCoche}
+                    />
 
-            <ModalRegistroCoche
-                mostrarModal={mostrarModal}
-                setMostrarModal={setMostrarModal}
-                nuevoCoche={nuevoCoche}
-                manejoCambioInput={manejoCambioInput}
-                manejoCambioArchivo={manejoCambioArchivo}
-                agregarCoche={agregarCoche}
-            />
+                    <ModalEliminacionCoche
+                        mostrarModalEliminacion={mostrarModalEliminacion}
+                        setMostrarModalEliminacion={setMostrarModalEliminacion}
+                        eliminarCoche={eliminarCoche}
+                        cocheAEliminar={cocheAEliminar}
+                    />
 
-            <ModalEdicionCoche
-                mostrarModalEdicion={mostrarModalEdicion}
-                setMostrarModalEdicion={setMostrarModalEdicion}
-                cocheEditar={cocheEditar}
-                manejoCambioInputEdicion={manejoCambioInputEdicion}
-                actualizarCoche={actualizarCoche}
-            />
+                    <NotificacionOperacion
+                        mostrar={toast.mostrar}
+                        mensaje={toast.mensaje}
+                        tipo={toast.tipo}
+                        onCerrar={() =>
+                            setToast({
+                                ...toast,
+                                mostrar: false,
+                            })
+                        }
+                    />
 
-            <ModalEliminacionCoche
-                mostrarModalEliminacion={mostrarModalEliminacion}
-                setMostrarModalEliminacion={setMostrarModalEliminacion}
-                eliminarCoche={eliminarCoche}
-                cocheAEliminar={cocheAEliminar}
-            />
+                </Container>
 
-            <NotificacionOperacion
-                mostrar={toast.mostrar}
-                mensaje={toast.mensaje}
-                tipo={toast.tipo}
-                onCerrar={() => setToast({ ...toast, mostrar: false })}
-            />
+            </div>
 
-        </Container>
+        </div>
     );
 };
 

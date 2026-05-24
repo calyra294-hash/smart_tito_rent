@@ -25,7 +25,6 @@ const Alquileres = () => {
         fecha_inicio: "",
         fecha_fin: "",
         estado: "En espera",
-
         id_usuario: "",
         id_coche: "",
         precio_total: "",
@@ -52,9 +51,6 @@ const Alquileres = () => {
         estado: "",
     });
 
-    // =========================
-    // MODAL DETALLE
-    // =========================
     const [mostrarModalDetalle, setMostrarModalDetalle] = useState(false);
 
     const [detalleAlquiler, setDetalleAlquiler] = useState([]);
@@ -95,7 +91,7 @@ const Alquileres = () => {
     };
 
     // =========================
-    // CARGAR USUARIOS Y COCHES
+    // CARGAR DATOS
     // =========================
     const cargarDatos = async () => {
 
@@ -120,7 +116,7 @@ const Alquileres = () => {
     }, []);
 
     // =========================
-    // FILTRO BUSQUEDA
+    // FILTRO
     // =========================
     useEffect(() => {
 
@@ -143,7 +139,7 @@ const Alquileres = () => {
     }, [textoBusqueda, alquileres]);
 
     // =========================
-    // INPUTS REGISTRO
+    // INPUT REGISTRO
     // =========================
     const manejoCambioInput = (e) => {
 
@@ -156,7 +152,7 @@ const Alquileres = () => {
     };
 
     // =========================
-    // INPUTS EDICION
+    // INPUT EDICIÓN
     // =========================
     const manejoCambioInputEdicion = (e) => {
 
@@ -213,9 +209,9 @@ const Alquileres = () => {
                 .insert([
                     {
                         id_alquiler: idAlquiler,
-                        id_usuario: nuevoAlquiler.id_usuario,
-                        id_coche: nuevoAlquiler.id_coche,
-                        precio_total: nuevoAlquiler.precio_total,
+                        id_usuario: parseInt(nuevoAlquiler.id_usuario),
+                        id_coche: parseInt(nuevoAlquiler.id_coche),
+                        precio_total: parseFloat(nuevoAlquiler.precio_total),
                     },
                 ]);
 
@@ -234,7 +230,6 @@ const Alquileres = () => {
                 fecha_inicio: "",
                 fecha_fin: "",
                 estado: "En espera",
-
                 id_usuario: "",
                 id_coche: "",
                 precio_total: "",
@@ -302,81 +297,116 @@ const Alquileres = () => {
     };
 
     // =========================
-    // ELIMINAR
-    // =========================
-    const eliminarAlquiler = async () => {
+// ELIMINAR
+// =========================
+const eliminarAlquiler = async () => {
 
-        try {
+    try {
 
-            if (!alquilerAEliminar?.id_alquiler) return;
+        if (!alquilerAEliminar?.id_alquiler) return;
+
+        // buscar coche relacionado
+        const { data: detalle } = await supabase
+            .from("detalle_alquiler")
+            .select("id_coche")
+            .eq("id_alquiler", alquilerAEliminar.id_alquiler)
+            .single();
+
+        // cambiar estado del coche a disponible
+        if (detalle) {
 
             await supabase
-                .from("detalle_alquiler")
-                .delete()
-                .eq("id_alquiler", alquilerAEliminar.id_alquiler);
-
-            const { error } = await supabase
-                .from("alquiler")
-                .delete()
-                .eq("id_alquiler", alquilerAEliminar.id_alquiler);
-
-            if (error) throw error;
-
-            setMostrarModalEliminacion(false);
-
-            cargarAlquileres();
-
-            setToast({
-                mostrar: true,
-                mensaje: "Alquiler eliminado correctamente",
-                tipo: "exito",
-            });
-
-        } catch (error) {
-
-            console.log(error);
-
-            setToast({
-                mostrar: true,
-                mensaje: "Error al eliminar alquiler",
-                tipo: "error",
-            });
+                .from("coche")
+                .update({
+                    estado: "Disponible",
+                })
+                .eq("id_coche", detalle.id_coche);
         }
-    };
+
+        // eliminar detalle
+        await supabase
+            .from("detalle_alquiler")
+            .delete()
+            .eq("id_alquiler", alquilerAEliminar.id_alquiler);
+
+        // eliminar alquiler
+        const { error } = await supabase
+            .from("alquiler")
+            .delete()
+            .eq("id_alquiler", alquilerAEliminar.id_alquiler);
+
+        if (error) throw error;
+
+        setMostrarModalEliminacion(false);
+
+        cargarAlquileres();
+        cargarDatos();
+
+        setToast({
+            mostrar: true,
+            mensaje: "Alquiler eliminado correctamente",
+            tipo: "exito",
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        setToast({
+            mostrar: true,
+            mensaje: "Error al eliminar alquiler",
+            tipo: "error",
+        });
+    }
+};
 
     // =========================
-    // VER DETALLE ALQUILER
+    // VER DETALLE
     // =========================
-    const verDetalleAlquiler = async (id_alquiler) => {
+const verDetalleAlquiler = async (id_alquiler) => {
 
-        try {
+    try {
 
-            const { data, error } = await supabase
-                .from("detalle_alquiler")
-                .select("*")
-                .eq("id_alquiler", id_alquiler);
+        const { data, error } = await supabase
+            .from("detalle_alquiler")
+            .select(`
+                id_detalle_alquiler,
+                id_usuario,
+                id_coche,
+                precio_total,
 
-            if (error) throw error;
+                usuario:id_usuario (
+                    nombre1,
+                    apellido1
+                ),
 
-            setDetalleAlquiler(data || []);
+                coche:id_coche (
+                    marca,
+                    modelo
+                )
+            `)
+            .eq("id_alquiler", id_alquiler);
 
-            setMostrarModalDetalle(true);
+        if (error) throw error;
 
-        } catch (error) {
+        console.log(data);
 
-            console.log(error);
+        setDetalleAlquiler(data || []);
 
-            setToast({
-                mostrar: true,
-                mensaje: "Error al cargar detalles",
-                tipo: "error",
-            });
-        }
-    };
+        setMostrarModalDetalle(true);
 
-    // =========================
-    // ABRIR MODALES
-    // =========================
+    } catch (error) {
+
+        console.log(error);
+
+        setToast({
+            mostrar: true,
+            mensaje: "Error al cargar detalles",
+            tipo: "error",
+        });
+    }
+};
+
     const abrirModalEdicion = (alquiler) => {
 
         setAlquilerEditar(alquiler);
@@ -389,112 +419,136 @@ const Alquileres = () => {
         setMostrarModalEliminacion(true);
     };
 
-    // =========================
-    // UI
-    // =========================
     return (
 
-        <Container className="mt-3">
+        <div className="contenido-principal">
+            <div className="contenedor-dashboard"> 
 
-            <Row className="align-items-center mb-3">
+            <Container fluid>
 
-                <Col>
-                    <h3>
-                        <i className="bi bi-calendar-check me-2"></i>
-                        Alquileres
-                    </h3>
-                </Col>
+                <div className="dashboard-card mb-4">
 
-                <Col className="text-end">
+                    <Row className="align-items-center mb-3">
+                    
 
-                    <Button onClick={() => setMostrarModal(true)}>
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Nuevo Alquiler
-                    </Button>
+                        <Col>
 
-                </Col>
+                            <h3 className="fw-bold mb-0">
+                                <i className="bi bi-calendar-check-fill me-2 text-danger"></i>
+                                Alquileres
+                            </h3>
 
-            </Row>
+                            <small className="text-muted">
+                                Gestión de alquileres registrados
+                            </small>
 
-            <hr />
+                        </Col>
 
-            <Row className="mb-4">
+                        <Col className="text-end">
 
-                <Col md={5}>
+                            <Button
+                                variant="danger"
+                                className="rounded-pill px-4 shadow-sm"
+                                onClick={() => setMostrarModal(true)}
+                            >
+                                <i className="bi bi-plus-circle me-2"></i>
+                                Nuevo Alquiler
+                            </Button>
 
-                    <CuadroBusquedas
-                        textoBusqueda={textoBusqueda}
-                        manejarCambioBusqueda={(e) =>
-                            setTextoBusqueda(e.target.value)
-                        }
-                        placeholder="Buscar alquiler..."
-                    />
+                        </Col>
 
-                </Col>
+                    </Row>
 
-            </Row>
+                </div>
+                <hr />
 
-            {cargando ? (
+                <div className="dashboard-card mb-4">
 
-                <div className="text-center">
-                    <Spinner animation="border" />
+                    <Row>
+
+                        <Col md={5}>
+
+                            <CuadroBusquedas
+                                textoBusqueda={textoBusqueda}
+                                manejarCambioBusqueda={(e) =>
+                                    setTextoBusqueda(e.target.value)
+                                }
+                                placeholder="Buscar alquiler..."
+                            />
+
+                        </Col>
+
+                    </Row>
+
                 </div>
 
-            ) : (
+                <div className="dashboard-card">
 
-                <TablaAlquileres
-                    alquileres={alquileresFiltrados}
-                    abrirModalEdicion={abrirModalEdicion}
-                    abrirModalEliminacion={abrirModalEliminacion}
-                    verDetalleAlquiler={verDetalleAlquiler}
+                    {cargando ? (
+
+                        <div className="text-center p-5">
+                            <Spinner animation="border" variant="danger" />
+                        </div>
+
+                    ) : (
+
+                        <TablaAlquileres
+                            alquileres={alquileresFiltrados}
+                            abrirModalEdicion={abrirModalEdicion}
+                            abrirModalEliminacion={abrirModalEliminacion}
+                            verDetalleAlquiler={verDetalleAlquiler}
+                        />
+
+                    )}
+
+                </div>
+
+                <ModalRegistroAlquiler
+                    mostrarModal={mostrarModal}
+                    setMostrarModal={setMostrarModal}
+                    nuevoAlquiler={nuevoAlquiler}
+                    manejoCambioInput={manejoCambioInput}
+                    agregarAlquiler={agregarAlquiler}
+                    usuarios={usuarios}
+                    coches={coches}
                 />
 
-            )}
+                <ModalEdicionAlquiler
+                    mostrarModalEdicion={mostrarModalEdicion}
+                    setMostrarModalEdicion={setMostrarModalEdicion}
+                    alquilerEditar={alquilerEditar}
+                    manejoCambioInputEdicion={manejoCambioInputEdicion}
+                    actualizarAlquiler={actualizarAlquiler}
+                />
 
-            <ModalRegistroAlquiler
-                mostrarModal={mostrarModal}
-                setMostrarModal={setMostrarModal}
-                nuevoAlquiler={nuevoAlquiler}
-                manejoCambioInput={manejoCambioInput}
-                agregarAlquiler={agregarAlquiler}
-                usuarios={usuarios}
-                coches={coches}
-            />
+                <ModalEliminacionAlquiler
+                    mostrarModalEliminacion={mostrarModalEliminacion}
+                    setMostrarModalEliminacion={setMostrarModalEliminacion}
+                    eliminarAlquiler={eliminarAlquiler}
+                    alquilerAEliminar={alquilerAEliminar}
+                />
 
-            <ModalEdicionAlquiler
-                mostrarModalEdicion={mostrarModalEdicion}
-                setMostrarModalEdicion={setMostrarModalEdicion}
-                alquilerEditar={alquilerEditar}
-                manejoCambioInputEdicion={manejoCambioInputEdicion}
-                actualizarAlquiler={actualizarAlquiler}
-            />
+                <ModalDetalleAlquiler
+                    mostrarModalDetalle={mostrarModalDetalle}
+                    setMostrarModalDetalle={setMostrarModalDetalle}
+                    detalleAlquiler={detalleAlquiler}
+                />
 
-            <ModalEliminacionAlquiler
-                mostrarModalEliminacion={mostrarModalEliminacion}
-                setMostrarModalEliminacion={setMostrarModalEliminacion}
-                eliminarAlquiler={eliminarAlquiler}
-                alquilerAEliminar={alquilerAEliminar}
-            />
+                <NotificacionOperacion
+                    mostrar={toast.mostrar}
+                    mensaje={toast.mensaje}
+                    tipo={toast.tipo}
+                    onCerrar={() =>
+                        setToast({
+                            ...toast,
+                            mostrar: false,
+                        })
+                    }
+                />
 
-            <ModalDetalleAlquiler
-                mostrarModalDetalle={mostrarModalDetalle}
-                setMostrarModalDetalle={setMostrarModalDetalle}
-                detalleAlquiler={detalleAlquiler}
-            />
-
-            <NotificacionOperacion
-                mostrar={toast.mostrar}
-                mensaje={toast.mensaje}
-                tipo={toast.tipo}
-                onCerrar={() =>
-                    setToast({
-                        ...toast,
-                        mostrar: false,
-                    })
-                }
-            />
-
-        </Container>
+            </Container>
+        </div>
+        </div>
     );
 };
 

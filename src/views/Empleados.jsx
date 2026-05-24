@@ -224,23 +224,38 @@ const Empleados = () => {
     };
 
     return (
-        <Container className="mt-3">
-            <Row className="align-items-center mb-3">
+        <div className="contenido-principal">
+            <div className="contenedor-dashboard">
+
+        <Container fluid>
+
+            <div className="dashboard-card mb-4">
+                <Row className="align-items-center"></Row>
+            </div>
+            <Row className="align-items-center">
                 <Col>
                     <h3 className="d-flex align-items-center">
-                        <i className="bi bi-people me-2"></i>
+                        <i className="bi bi-people me-2 text-danger"></i>
                         Empleados
                     </h3>
+                    <small className="text-muted">
+                                    Gestión de Empleados registrados
+                                </small>
                 </Col>
 
                 <Col className="text-end">
-                    <Button onClick={() => setMostrarModal(true)}>
+                    <Button
+                    variant="danger"
+                    onClick={() => setMostrarModal(true)}
+                    >
                         Nuevo Empleado
                     </Button>
                 </Col>
             </Row>
+            
 
             <hr />
+            
 
             {cargando ? (
                 <Spinner animation="border" />
@@ -282,6 +297,8 @@ const Empleados = () => {
                 onCerrar={() => setToast({ ...toast, mostrar: false })}
             />
         </Container>
+        </div>
+        </div>
     );
 };
 

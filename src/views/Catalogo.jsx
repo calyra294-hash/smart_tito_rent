@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import {
+    Container,
     Row,
     Col,
     Spinner,
@@ -130,7 +131,8 @@ const Catalogo = () => {
 
     return (
 
-        <div className="mt-3 px-2">
+        <div className="contenido-principal">
+            <Container fluid>
 
             {/* TÍTULO */}
             <Row className="text-center mb-3">
@@ -283,8 +285,9 @@ const Catalogo = () => {
                 </Row>
 
             )}
-
+        </Container>
         </div>
+        
     );
 };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Button, Table } from "react-bootstrap";
+import { Modal, Button, Table, Badge } from "react-bootstrap";
 
 const ModalDetalleAlquiler = ({
     mostrarModalDetalle,
@@ -19,7 +19,7 @@ const ModalDetalleAlquiler = ({
             <Modal.Header closeButton>
 
                 <Modal.Title>
-                    <i className="bi bi-receipt me-2"></i>
+                    <i className="bi bi-receipt me-2 text-danger"></i>
                     Detalle del Alquiler
                 </Modal.Title>
 
@@ -29,21 +29,31 @@ const ModalDetalleAlquiler = ({
 
                 {detalleAlquiler?.length === 0 ? (
 
-                    <p className="text-center">
+                    <p className="text-center text-muted">
                         No hay detalles registrados.
                     </p>
 
                 ) : (
 
-                    <Table striped bordered hover responsive>
+                    <Table
+                        striped
+                        hover
+                        responsive
+                        className="align-middle"
+                    >
 
-                        <thead>
+                        <thead className="table-light">
 
                             <tr>
-                                <th>ID Detalle</th>
-                                <th>ID Coche</th>
-                                <th>ID Usuario</th>
-                                <th>Precio Total</th>
+
+                                <th>ID</th>
+
+                                <th>Cliente</th>
+
+                                <th>Vehículo</th>
+
+                                <th>Precio</th>
+
                             </tr>
 
                         </thead>
@@ -54,10 +64,27 @@ const ModalDetalleAlquiler = ({
 
                                 <tr key={detalle.id_detalle_alquiler}>
 
-                                    <td>{detalle.id_detalle_alquiler}</td>
-                                    <td>{detalle.id_coche}</td>
-                                    <td>{detalle.id_usuario}</td>
-                                    <td>C$ {detalle.precio_total}</td>
+                                    <td>
+                                        <Badge bg="danger">
+                                            #{detalle.id_detalle_alquiler}
+                                        </Badge>
+                                    </td>
+
+                                    <td>
+                                        {detalle.usuario
+                                            ? `${detalle.usuario.nombre1} ${detalle.usuario.apellido1}`
+                                            : "Sin usuario"}
+                                    </td>
+
+                                    <td>
+                                        {detalle.coche
+                                            ? `${detalle.coche.marca} ${detalle.coche.modelo}`
+                                            : "Sin vehículo"}
+                                    </td>
+
+                                    <td className="fw-bold text-success">
+                                        C$ {detalle.precio_total}
+                                    </td>
 
                                 </tr>
 
@@ -74,7 +101,7 @@ const ModalDetalleAlquiler = ({
             <Modal.Footer>
 
                 <Button
-                    variant="secondary"
+                    variant="danger"
                     onClick={() => setMostrarModalDetalle(false)}
                 >
                     Cerrar

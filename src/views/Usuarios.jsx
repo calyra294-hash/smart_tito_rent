@@ -46,34 +46,37 @@ const Usuarios = () => {
     const [usuarioEditar, setUsuarioEditar] = useState(null);
 
     // =========================
-    // CARGAR
+    // CARGAR USUARIOS
     // =========================
     const cargarUsuarios = async () => {
+        try {
+            setCargando(true);
 
-        setCargando(true);
+            const { data, error } = await supabase
+                .from("usuario")
+                .select("*")
+                .order("id_usuario", { ascending: true });
 
-        const { data, error } = await supabase
-            .from("usuario")
-            .select("*")
-            .order("id_usuario", { ascending: true });
+            console.log("USUARIOS CARGADOS:", data);
+            console.log("ERROR CARGA:", error);
 
-        if (error) {
+            if (error) throw error;
 
-            console.log(error);
+            setUsuarios(data || []);
+            setUsuariosFiltrados(data || []);
+
+        } catch (error) {
+            console.log("ERROR CARGAR:", error);
 
             setToast({
                 mostrar: true,
-                mensaje: "Error al cargar usuarios",
+                mensaje: error.message || "Error al cargar usuarios",
                 tipo: "error",
             });
 
+        } finally {
             setCargando(false);
-            return;
         }
-
-        setUsuarios(data || []);
-        setUsuariosFiltrados(data || []);
-        setCargando(false);
     };
 
     useEffect(() => {
@@ -84,7 +87,6 @@ const Usuarios = () => {
     // FILTRO
     // =========================
     useEffect(() => {
-
         const texto = textoBusqueda.toLowerCase();
 
         setUsuariosFiltrados(
@@ -94,7 +96,7 @@ const Usuarios = () => {
                     u.apellido1,
                     u.cedula,
                     u.email,
-                    u.telefono
+                    u.telefono,
                 ]
                     .some((campo) =>
                         campo?.toLowerCase().includes(texto)
@@ -108,7 +110,6 @@ const Usuarios = () => {
     // INPUT REGISTRO
     // =========================
     const manejoCambioInput = (e) => {
-
         const { name, value } = e.target;
 
         setNuevoUsuario((prev) => ({
@@ -118,28 +119,20 @@ const Usuarios = () => {
     };
 
     // =========================
-    // INPUT EDICION
-    // =========================
-    const manejoCambioInputEdicion = (e) => {
-
-        const { name, value } = e.target;
-
-        setUsuarioEditar((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
-    // =========================
-    // REGISTRAR
+    // REGISTRAR USUARIO (CORREGIDO)
     // =========================
     const agregarUsuario = async () => {
-
         try {
 
-            const { error } = await supabase
+            console.log("ENVIANDO USUARIO:", nuevoUsuario);
+
+            const { data, error } = await supabase
                 .from("usuario")
-                .insert([nuevoUsuario]);
+                .insert([nuevoUsuario])
+                .select();
+
+            console.log("DATA INSERT:", data);
+            console.log("ERROR INSERT:", error);
 
             if (error) throw error;
 
@@ -168,12 +161,11 @@ const Usuarios = () => {
             });
 
         } catch (error) {
-
-            console.log(error);
+            console.log("ERROR COMPLETO INSERT:", error);
 
             setToast({
                 mostrar: true,
-                mensaje: "Error al registrar usuario",
+                mensaje: error.message || "Error al registrar usuario",
                 tipo: "error",
             });
         }
@@ -183,55 +175,41 @@ const Usuarios = () => {
     // ACTUALIZAR
     // =========================
     const actualizarUsuario = async () => {
+    try {
 
-        try {
+        const { id_usuario, ...datos } = usuarioEditar;
 
-            const { error } = await supabase
-                .from("usuario")
-                .update({
-                    rol: usuarioEditar.rol,
-                    cedula: usuarioEditar.cedula,
-                    nombre1: usuarioEditar.nombre1,
-                    nombre2: usuarioEditar.nombre2,
-                    apellido1: usuarioEditar.apellido1,
-                    apellido2: usuarioEditar.apellido2,
-                    telefono: usuarioEditar.telefono,
-                    direccion: usuarioEditar.direccion,
-                    email: usuarioEditar.email,
-                    licencia: usuarioEditar.licencia,
-                    contrasena: usuarioEditar.contrasena,
-                })
-                .eq("id_usuario", usuarioEditar.id_usuario);
+        const { error } = await supabase
+            .from("usuario")
+            .update(datos)
+            .eq("id_usuario", id_usuario);
 
-            if (error) throw error;
+        if (error) throw error;
 
-            setMostrarModalEdicion(false);
+        setMostrarModalEdicion(false);
+        cargarUsuarios();
 
-            cargarUsuarios();
+        setToast({
+            mostrar: true,
+            mensaje: "Usuario actualizado correctamente",
+            tipo: "exito",
+        });
 
-            setToast({
-                mostrar: true,
-                mensaje: "Usuario actualizado",
-                tipo: "exito",
-            });
+    } catch (error) {
+        console.log(error);
 
-        } catch (error) {
-
-            console.log(error);
-
-            setToast({
-                mostrar: true,
-                mensaje: "Error al actualizar usuario",
-                tipo: "error",
-            });
-        }
-    };
+        setToast({
+            mostrar: true,
+            mensaje: error.message || "Error al actualizar usuario",
+            tipo: "error",
+        });
+    }
+};
 
     // =========================
     // ELIMINAR
     // =========================
     const eliminarUsuario = async () => {
-
         try {
 
             const { error } = await supabase
@@ -242,22 +220,20 @@ const Usuarios = () => {
             if (error) throw error;
 
             setMostrarModalEliminacion(false);
-
             cargarUsuarios();
 
             setToast({
                 mostrar: true,
-                mensaje: "Usuario eliminado",
+                mensaje: "Usuario eliminado correctamente",
                 tipo: "exito",
             });
 
         } catch (error) {
-
             console.log(error);
 
             setToast({
                 mostrar: true,
-                mensaje: "Error al eliminar usuario",
+                mensaje: error.message || "Error al eliminar usuario",
                 tipo: "error",
             });
         }
@@ -267,106 +243,116 @@ const Usuarios = () => {
     // UI
     // =========================
     return (
+        <div className="contenido-principal">
+            <div className="contenedor-dashboard">
+                <Container fluid>
 
-        <Container className="mt-3">
+                    {/* HEADER */}
+                    <div className="dashboard-card mb-4">
+                        <Row className="align-items-center">
 
-            <Row className="align-items-center mb-3">
+                            <Col>
+                                <h3 className="fw-bold mb-0">
+                                    <i className="bi bi-people-fill me-2 text-danger"></i>
+                                    Usuarios
+                                </h3>
+                                <small className="text-muted">
+                                    Gestión de usuarios registrados
+                                </small>
+                            </Col>
 
-                <Col>
-                    <h3>
-                        <i className="bi bi-people-fill me-2"></i>
-                        Usuarios
-                    </h3>
-                </Col>
+                            <Col className="text-end">
+                                <Button
+                                    variant="danger"
+                                    onClick={() => setMostrarModal(true)}
+                                >
+                                    Nuevo Usuario
+                                </Button>
+                            </Col>
 
-                <Col className="text-end">
+                        </Row>
+                    </div>
+<hr />
+                    {/* BUSCADOR */}
+                    <div className="dashboard-card mb-4">
+                        <Row>
+                            <Col md={5}>
+                                <CuadroBusquedas
+                                    textoBusqueda={textoBusqueda}
+                                    manejarCambioBusqueda={(e) =>
+                                        setTextoBusqueda(e.target.value)
+                                    }
+                                />
+                            </Col>
+                        </Row>
+                    </div>
 
-                    <Button onClick={() => setMostrarModal(true)}>
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Nuevo Usuario
-                    </Button>
+                    {/* TABLA */}
+                    <div className="dashboard-card">
 
-                </Col>
+                        {cargando ? (
+                            <div className="text-center p-5">
+                                <Spinner animation="border" variant="danger" />
+                            </div>
+                        ) : (
+                            <TablaUsuarios
+                                usuarios={usuariosFiltrados}
+                                abrirModalEdicion={(u) => {
+                                    setUsuarioEditar(u);
+                                    setMostrarModalEdicion(true);
+                                }}
+                                abrirModalEliminacion={(u) => {
+                                    setUsuarioAEliminar(u);
+                                    setMostrarModalEliminacion(true);
+                                }}
+                            />
+                        )}
 
-            </Row>
+                    </div>
 
-            <hr />
+                    {/* MODALES */}
+                    <ModalRegistroUsuario
+                        mostrarModal={mostrarModal}
+                        setMostrarModal={setMostrarModal}
+                        nuevoUsuario={nuevoUsuario}
+                        manejoCambioInput={manejoCambioInput}
+                        agregarUsuario={agregarUsuario}
+                    />
 
-            <Row className="mb-4">
+                    <ModalEdicionUsuario
+                        mostrarModalEdicion={mostrarModalEdicion}
+                        setMostrarModalEdicion={setMostrarModalEdicion}
+                        usuarioEditar={usuarioEditar}
+                        manejoCambioInputEdicion={(e) => {
+                            const { name, value } = e.target;
+                            setUsuarioEditar((prev) => ({
+                                ...prev,
+                                [name]: value,
+                            }));
+                        }}
+                        actualizarUsuario={actualizarUsuario}
+                    />
 
-                <Col md={5}>
+                    <ModalEliminacionUsuario
+                        mostrarModalEliminacion={mostrarModalEliminacion}
+                        setMostrarModalEliminacion={setMostrarModalEliminacion}
+                        usuarioAEliminar={usuarioAEliminar}
+                        eliminarUsuario={eliminarUsuario}
+                    />
 
-                    <CuadroBusquedas
-                        textoBusqueda={textoBusqueda}
-                        manejarCambioBusqueda={(e) =>
-                            setTextoBusqueda(e.target.value)
+                    {/* TOAST */}
+                    <NotificacionOperacion
+                        mostrar={toast.mostrar}
+                        mensaje={toast.mensaje}
+                        tipo={toast.tipo}
+                        onCerrar={() =>
+                            setToast({ ...toast, mostrar: false })
                         }
                     />
 
-                </Col>
-
-            </Row>
-
-            {cargando ? (
-
-                <Spinner animation="border" />
-
-            ) : (
-
-                <TablaUsuarios
-                    usuarios={usuariosFiltrados}
-                    abrirModalEdicion={(u) => {
-                        setUsuarioEditar(u);
-                        setMostrarModalEdicion(true);
-                    }}
-                    abrirModalEliminacion={(u) => {
-                        setUsuarioAEliminar(u);
-                        setMostrarModalEliminacion(true);
-                    }}
-                />
-
-            )}
-
-            {/* MODAL REGISTRO */}
-            <ModalRegistroUsuario
-                mostrarModal={mostrarModal}
-                setMostrarModal={setMostrarModal}
-                nuevoUsuario={nuevoUsuario}
-                manejoCambioInput={manejoCambioInput}
-                agregarUsuario={agregarUsuario}
-            />
-
-            {/* MODAL EDICION */}
-            <ModalEdicionUsuario
-                mostrarModalEdicion={mostrarModalEdicion}
-                setMostrarModalEdicion={setMostrarModalEdicion}
-                usuarioEditar={usuarioEditar}
-                manejoCambioInputEdicion={manejoCambioInputEdicion}
-                actualizarUsuario={actualizarUsuario}
-            />
-
-            {/* MODAL ELIMINACION */}
-            <ModalEliminacionUsuario
-                mostrarModalEliminacion={mostrarModalEliminacion}
-                setMostrarModalEliminacion={setMostrarModalEliminacion}
-                usuarioAEliminar={usuarioAEliminar}
-                eliminarUsuario={eliminarUsuario}
-            />
-
-            {/* TOAST */}
-            <NotificacionOperacion
-                mostrar={toast.mostrar}
-                mensaje={toast.mensaje}
-                tipo={toast.tipo}
-                onCerrar={() =>
-                    setToast({
-                        ...toast,
-                        mostrar: false,
-                    })
-                }
-            />
-
-        </Container>
+                </Container>
+            </div>
+        </div>
     );
 };
 

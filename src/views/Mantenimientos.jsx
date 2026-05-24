@@ -210,6 +210,8 @@ const Mantenimientos = () => {
     };
 
     return (
+        <div className="contenido-principal">
+            <div className="contenedor-dashboard">
         <Container className="mt-3">
             <Row className="align-items-center mb-3">
                 <Col>
@@ -271,6 +273,8 @@ const Mantenimientos = () => {
                 onCerrar={() => setToast({ ...toast, mostrar: false })}
             />
         </Container>
+        </div>
+        </div>
     );
 };
 
