@@ -43,7 +43,11 @@ const FormularioLogin = ({
                         />
                     </Form.Group>
 
-                    <Button variant="primary" className="w-100" onClick={iniciarSesion}>
+                    <Button
+                        variant="danger"
+                        className="w-100 rounded-pill shadow-sm"
+                        onClick={iniciarSesion}
+                    >
                         Iniciar Sesión
                     </Button>
                 </Form>

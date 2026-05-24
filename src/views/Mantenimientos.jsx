@@ -218,9 +218,21 @@ const Mantenimientos = () => {
                     <h3 className="d-flex align-items-center">
                         <i className="bi bi-tools me-2"></i> Mantenimientos
                     </h3>
+                    <small className="text-muted">
+                                    Gestión de Mantenimientos
+                                </small>
                 </Col>
+
                 <Col className="text-end">
-                    <Button onClick={() => setMostrarModal(true)}>Nuevo Mantenimiento</Button>
+
+                    <Button 
+                    variant="danger"
+                        className="rounded-pill px-4 shadow-sm"
+                                    onClick={() => setMostrarModal(true)}
+                    >
+                        <i className="bi bi-plus-circle me-2"></i>
+                        Nuevo Mantenimiento
+                    </Button>
                 </Col>
             </Row>
             <hr />

@@ -264,8 +264,10 @@ const Usuarios = () => {
                             <Col className="text-end">
                                 <Button
                                     variant="danger"
+                                    className="rounded-pill px-4 shadow-sm"
                                     onClick={() => setMostrarModal(true)}
                                 >
+                                    <i className="bi bi-plus-circle me-2"></i>
                                     Nuevo Usuario
                                 </Button>
                             </Col>

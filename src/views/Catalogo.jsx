@@ -140,7 +140,7 @@ const Catalogo = () => {
                 <Col>
 
                     <h2>
-                        <i className="bi bi-car-front-fill me-2"></i>
+                        <i className="bi bi-car-front-fill me-2 text-danger"></i>
                         Catálogo de Vehículos
                     </h2>
 
