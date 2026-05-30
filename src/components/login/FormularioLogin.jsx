@@ -1,6 +1,6 @@
 import React from "react";
 import { Form, Button, Card, Alert } from "react-bootstrap";
-
+import logo from "../../assets/logo-titos.png"; 
 
 const FormularioLogin = ({
     usuario,
@@ -12,50 +12,63 @@ const FormularioLogin = ({
 }) => {
     return (
         <Card
-            style={{ minWidth: "320px", maxWidth: "400px", width: "100%" }}
-            className="p-4 shadow-lg"
+            className="login-card"
+            style={{
+                minWidth: "320px",
+                maxWidth: "420px",
+                width: "100%",
+            }}
         >
             <Card.Body>
-                <h3 className="text-center mb-4">Iniciar Sesión</h3>
+
+                <img
+                    src={logo}
+                    alt="Tito's Rent a Car"
+                    className="logo-login"
+                />
+
+                <h2 className="text-center titulo-login">
+                    Iniciar Sesión
+                </h2>
+
+                <p className="text-center subtitulo-login">
+                    Bienvenido a Tito's Rent a Car
+                </p>
 
                 {error && <Alert variant="danger">{error}</Alert>}
 
                 <Form>
-                    <Form.Group className="mb-3" controlId="usuario">
-                        <Form.Label>Usuario</Form.Label>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Correo electrónico</Form.Label>
                         <Form.Control
-                            type="text"
-                            placeholder="Ingresa tu usuario"
+                            type="email"
+                            placeholder="Ingresa tu correo"
                             value={usuario}
                             onChange={(e) => setUsuario(e.target.value)}
-                            required
                         />
                     </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="contrasena">
+                    <Form.Group className="mb-4">
                         <Form.Label>Contraseña</Form.Label>
                         <Form.Control
                             type="password"
                             placeholder="Ingresa tu contraseña"
                             value={contrasena}
                             onChange={(e) => setContrasena(e.target.value)}
-                            required
                         />
                     </Form.Group>
 
                     <Button
-                        variant="danger"
-                        className="w-100 rounded-pill shadow-sm"
+                        className="btn-login"
                         onClick={iniciarSesion}
                     >
                         Iniciar Sesión
                     </Button>
                 </Form>
+
             </Card.Body>
         </Card>
-
     );
-
 };
 
 export default FormularioLogin;
