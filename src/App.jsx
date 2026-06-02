@@ -12,6 +12,7 @@ import Detalles_Mantenimiento from "./views/Detalles_Mantenimiento.jsx";
 import Empleados from "./views/Empleados.jsx"; 
 import Mantenimientos from "./views/Mantenimientos.jsx"; 
 import Usuarios from "./views/Usuarios.jsx"; 
+import Dashboard from "./views/Dashboard.jsx"; 
 
 import Login from "./views/Login";
 import RutaProtegida from "./components/rutas/RutaProtegida";
@@ -41,7 +42,7 @@ const App = () => {
           <Route path="/empleados" element={<RutaProtegida><Empleados /></RutaProtegida>} />
           <Route path="/mantenimientos" element={<RutaProtegida><Mantenimientos /></RutaProtegida>} />
           <Route path="/usuarios" element={<RutaProtegida><Usuarios /></RutaProtegida>} />
-
+          <Route path="/dashboard" element={<RutaProtegida><Dashboard /></RutaProtegida>} />
 
           <Route path="*" element={<Pagina404 />} />
 
