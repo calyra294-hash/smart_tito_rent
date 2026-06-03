@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
+import emailjs from "@emailjs/browser";
 
+import ModalEnvioCorreoEmpleados from "../components/empleados/ModalEnvioCorreoEmpleados";
 import ModalRegistroEmpleado from "../components/empleados/ModalRegistroEmpleado";
 import ModalEdicionEmpleado from "../components/empleados/ModalEdicionEmpleado";
 import ModalEliminacionEmpleado from "../components/empleados/ModalEliminacionEmpleado";
@@ -52,6 +54,10 @@ const Empleados = () => {
         cedula: "",
     });
 
+    const [mostrarModalCorreo, setMostrarModalCorreo] = useState(false);
+    const [emailDestino, setEmailDestino] = useState("");
+    const [enviandoCorreo, setEnviandoCorreo] = useState(false);
+
     // 🔥 CARGAR EMPLEADOS (sin contraseña)
     const cargarEmpleados = async () => {
         try {
@@ -80,6 +86,88 @@ const Empleados = () => {
     useEffect(() => {
         cargarEmpleados();
     }, []);
+
+    // Inicializar EmailJS
+    useEffect(() => {
+        emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
+    }, []);
+
+    const abrirModalCorreo = () => {
+        setEmailDestino("");
+        setMostrarModalCorreo(true);
+    };
+
+    const formatearEmpleadosParaCorreo = () => {
+        if (empleados.length === 0) return "No hay empleados registrados.";
+
+        let texto = `LISTADO DE EMPLEADOS\n\n`;
+        texto += `Fecha: ${new Date().toLocaleDateString("es-NI")}\n`;
+        texto += `Total de empleados: ${empleados.length}\n\n`;
+
+        empleados.forEach((empleado, index) => {
+            const nombreCompleto = `${empleado.primer_nombre} ${empleado.segundo_nombre ? empleado.segundo_nombre + " " : ""}${empleado.primer_apellido} ${empleado.segundo_apellido}`.trim();
+            texto += `${index + 1}. ${nombreCompleto}\n`;
+            texto += `   Rol: ${empleado.rol}\n`;
+            texto += `   Correo: ${empleado.email}\n`;
+            texto += `   Cédula: ${empleado.cedula}\n`;
+            texto += `   Fecha contratación: ${empleado.fecha_contratacion}\n`;
+            if (empleado.direccion) {
+                texto += `   Dirección: ${empleado.direccion}\n`;
+            }
+            texto += `\n`;
+        });
+
+        return texto;
+    };
+
+    const enviarCorreoEmpleados = () => {
+        if (!emailDestino.trim()) {
+            setToast({
+                mostrar: true,
+                mensaje: "Por favor ingresa un correo destino.",
+                tipo: "advertencia",
+            });
+            return;
+        }
+
+        setEnviandoCorreo(true);
+
+        const mensaje = formatearEmpleadosParaCorreo();
+
+        const templateParams = {
+            to_name: "Administrador",
+            user_email: emailDestino,
+            message: mensaje,
+            fecha_envio: new Date().toLocaleDateString("es-NI"),
+        };
+
+        emailjs
+            .send(
+                import.meta.env.VITE_EMAILJS_SERVICE_ID,
+                import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+                templateParams
+            )
+            .then(() => {
+                setToast({
+                    mostrar: true,
+                    mensaje: "Correo enviado correctamente.",
+                    tipo: "exito",
+                });
+                setMostrarModalCorreo(false);
+                setEmailDestino("");
+            })
+            .catch((error) => {
+                console.error("Error EmailJS:", error);
+                setToast({
+                    mostrar: true,
+                    mensaje: "Error al enviar el correo.",
+                    tipo: "error",
+                });
+            })
+            .finally(() => {
+                setEnviandoCorreo(false);
+            });
+    };
 
     // INPUT REGISTRO
     const manejoCambioInput = (e) => {
@@ -227,79 +315,92 @@ const Empleados = () => {
         <div className="contenido-principal">
             <div className="contenedor-dashboard">
 
-        <Container fluid>
+                <Container fluid>
 
-            <div className="dashboard-card mb-4">
-                <Row className="align-items-center"></Row>
+                    <div className="dashboard-card mb-4">
+                        <Row className="align-items-center"></Row>
+                    </div>
+
+
+                    <Row className="align-items-center mb-3">
+                        <Col xs={8} sm={8} md={8} lg={8} className="d-flex align-items-center">
+                            <h3 className="mb-0">
+                                <i className="bi bi-people-fill me-2"></i> Empleados
+                            </h3>
+                        </Col>
+                        <Col xs={2} sm={2} md={2} lg={2} className="text-end">
+                            <Button variant="primary" onClick={abrirModalCorreo} size="md">
+                                <i className="bi bi-envelope"></i>
+                                <span className="d-none d-lg-inline ms-2">Enviar por Correo</span>
+                            </Button>
+                        </Col>
+                        <Col xs={2} sm={2} md={2} lg={2} className="text-end">
+                            <Button
+                                variant="danger"
+                                onClick={() => setMostrarModal(true)}
+                                size="md"
+                            >
+                                <i className="bi-plus-lg"></i>
+                                <span className="d-none d-lg-inline ms-2">Nuevo Empleado</span>
+                            </Button>
+                        </Col>
+                    </Row>
+
+
+                    <hr />
+
+
+                    {cargando ? (
+                        <Spinner animation="border" />
+                    ) : (
+                        <TablaEmpleado
+                            empleados={empleados}
+                            abrirModalEdicion={abrirModalEdicion}
+                            abrirModalEliminacion={abrirModalEliminacion}
+                        />
+                    )}
+
+                    <ModalRegistroEmpleado
+                        mostrarModal={mostrarModal}
+                        setMostrarModal={setMostrarModal}
+                        nuevoEmpleado={nuevoEmpleado}
+                        manejoCambioInput={manejoCambioInput}
+                        agregarEmpleado={agregarEmpleado}
+                    />
+
+                    <ModalEdicionEmpleado
+                        mostrarModalEdicion={mostrarModalEdicion}
+                        setMostrarModalEdicion={setMostrarModalEdicion}
+                        empleadoEditar={empleadoEditar}
+                        manejoCambioInputEdicion={manejoCambioInputEdicion}
+                        actualizarEmpleado={actualizarEmpleado}
+                    />
+
+                    <ModalEnvioCorreoEmpleados
+                        mostrarModalCorreo={mostrarModalCorreo}
+                        setMostrarModalCorreo={setMostrarModalCorreo}
+                        emailDestino={emailDestino}
+                        setEmailDestino={setEmailDestino}
+                        enviandoCorreo={enviandoCorreo}
+                        enviarCorreoEmpleados={enviarCorreoEmpleados}
+                        totalEmpleados={empleados.length}
+                    />
+
+                    <ModalEliminacionEmpleado
+                        mostrarModalEliminacion={mostrarModalEliminacion}
+                        setMostrarModalEliminacion={setMostrarModalEliminacion}
+                        eliminarEmpleado={eliminarEmpleado}
+                        empleadoAEliminar={empleadoAEliminar}
+                    />
+
+                    <NotificacionOperacion
+                        mostrar={toast.mostrar}
+                        mensaje={toast.mensaje}
+                        tipo={toast.tipo}
+                        onCerrar={() => setToast({ ...toast, mostrar: false })}
+                    />
+                </Container>
             </div>
-            <Row className="align-items-center">
-                <Col>
-                    <h3 className="d-flex align-items-center">
-                        <i className="bi bi-people me-2 text-danger"></i>
-                        Empleados
-                    </h3>
-                    <small className="text-muted">
-                                    Gestión de Empleados registrados
-                                </small>
-                </Col>
-
-                <Col className="text-end">
-                    <Button
-                    variant="danger"
-                    className="rounded-pill px-4 shadow-sm"
-                    onClick={() => setMostrarModal(true)}
-                    >
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Nuevo Empleado
-                    </Button>
-                </Col>
-            </Row>
-            
-
-            <hr />
-            
-
-            {cargando ? (
-                <Spinner animation="border" />
-            ) : (
-                <TablaEmpleado
-                    empleados={empleados}
-                    abrirModalEdicion={abrirModalEdicion}
-                    abrirModalEliminacion={abrirModalEliminacion}
-                />
-            )}
-
-            <ModalRegistroEmpleado
-                mostrarModal={mostrarModal}
-                setMostrarModal={setMostrarModal}
-                nuevoEmpleado={nuevoEmpleado}
-                manejoCambioInput={manejoCambioInput}
-                agregarEmpleado={agregarEmpleado}
-            />
-
-            <ModalEdicionEmpleado
-                mostrarModalEdicion={mostrarModalEdicion}
-                setMostrarModalEdicion={setMostrarModalEdicion}
-                empleadoEditar={empleadoEditar}
-                manejoCambioInputEdicion={manejoCambioInputEdicion}
-                actualizarEmpleado={actualizarEmpleado}
-            />
-
-            <ModalEliminacionEmpleado
-                mostrarModalEliminacion={mostrarModalEliminacion}
-                setMostrarModalEliminacion={setMostrarModalEliminacion}
-                eliminarEmpleado={eliminarEmpleado}
-                empleadoAEliminar={empleadoAEliminar}
-            />
-
-            <NotificacionOperacion
-                mostrar={toast.mostrar}
-                mensaje={toast.mensaje}
-                tipo={toast.tipo}
-                onCerrar={() => setToast({ ...toast, mostrar: false })}
-            />
-        </Container>
-        </div>
         </div>
     );
 };
