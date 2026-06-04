@@ -6,6 +6,7 @@ import ModalRegistroAlquiler from "../components/alquileres/ModalRegistroAlquile
 import ModalEdicionAlquiler from "../components/alquileres/ModalEdicionAlquiler";
 import ModalEliminacionAlquiler from "../components/alquileres/ModalEliminacionAlquiler";
 import ModalDetalleAlquiler from "../components/alquileres/ModalDetalleAlquiler";
+import TarjetaAlquiler from "../components/alquileres/TarjetaAlquiler";
 import TablaAlquileres from "../components/alquileres/TablaAlquileres";
 
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
@@ -484,22 +485,39 @@ const verDetalleAlquiler = async (id_alquiler) => {
 
                 <div className="dashboard-card">
 
-                    {cargando ? (
+                   {/* ... resto de tu código igual ... */}
 
-                        <div className="text-center p-5">
-                            <Spinner animation="border" variant="danger" />
-                        </div>
+<div className="dashboard-card">
+    {cargando ? (
+        <div className="text-center p-5">
+            <Spinner animation="border" variant="success" />
+        </div>
+    ) : (
+        <>
+            {/* VISTA DE ESCRITORIO (PC): Oculta en móviles */}
+            <div className="d-none d-md-block">
+                <TablaAlquileres
+                    alquileres={alquileresFiltrados}
+                    abrirModalEdicion={abrirModalEdicion}
+                    abrirModalEliminacion={abrirModalEliminacion}
+                    verDetalleAlquiler={verDetalleAlquiler} // <-- Agregado aquí también por si acaso
+                />
+            </div>
 
-                    ) : (
+            {/* VISTA MÓVIL: Visible en smartphones */}
+            <div className="d-block d-md-none">
+                <TarjetaAlquiler
+                    alquileres={alquileresFiltrados}
+                    abrirModalEdicion={abrirModalEdicion}
+                    abrirModalEliminacion={abrirModalEliminacion}
+                    verDetalleAlquiler={verDetalleAlquiler} // <-- ¡Solucionado!
+                />
+            </div>
+        </>
+    )}
+</div>
 
-                        <TablaAlquileres
-                            alquileres={alquileresFiltrados}
-                            abrirModalEdicion={abrirModalEdicion}
-                            abrirModalEliminacion={abrirModalEliminacion}
-                            verDetalleAlquiler={verDetalleAlquiler}
-                        />
-
-                    )}
+{/* ... resto de los modales igual ... */}
 
                 </div>
 

@@ -5,6 +5,7 @@ import { supabase } from "../database/supabaseconfig";
 import ModalRegistroUsuario from "../components/usuarios/ModalRegistroUsuario";
 import ModalEdicionUsuario from "../components/usuarios/ModalEdicionUsuario";
 import ModalEliminacionUsuario from "../components/usuarios/ModalEliminacionUsuario";
+import TarjetaUsuarios from "../components/usuarios/TarjetaUsuario";
 import TablaUsuarios from "../components/usuarios/TablaUsuarios";
 
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
@@ -291,25 +292,43 @@ const Usuarios = () => {
 
                     {/* TABLA */}
                     <div className="dashboard-card">
-
                         {cargando ? (
                             <div className="text-center p-5">
                                 <Spinner animation="border" variant="danger" />
                             </div>
                         ) : (
-                            <TablaUsuarios
-                                usuarios={usuariosFiltrados}
-                                abrirModalEdicion={(u) => {
-                                    setUsuarioEditar(u);
-                                    setMostrarModalEdicion(true);
-                                }}
-                                abrirModalEliminacion={(u) => {
-                                    setUsuarioAEliminar(u);
-                                    setMostrarModalEliminacion(true);
-                                }}
-                            />
-                        )}
+                            <>
+                                {/* VISTA DE ESCRITORIO: Oculta en móviles, visible desde 'md' en adelante */}
+                                <div className="d-none d-md-block">
+                                    <TablaUsuarios
+                                        usuarios={usuariosFiltrados}
+                                        abrirModalEdicion={(u) => {
+                                            setUsuarioEditar(u);
+                                            setMostrarModalEdicion(true);
+                                        }}
+                                        abrirModalEliminacion={(u) => {
+                                            setUsuarioAEliminar(u);
+                                            setMostrarModalEliminacion(true);
+                                        }}
+                                    />
+                                </div>
 
+                                {/* VISTA MÓVIL: Visible en pantallas chicas, se oculta a partir de 'md' */}
+                                <div className="d-block d-md-none">
+                                    <TarjetaUsuarios
+                                        usuarios={usuariosFiltrados}
+                                        abrirModalEdicion={(u) => {
+                                            setUsuarioEditar(u);
+                                            setMostrarModalEdicion(true);
+                                        }}
+                                        abrirModalEliminacion={(u) => {
+                                            setUsuarioAEliminar(u);
+                                            setMostrarModalEliminacion(true);
+                                        }}
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* MODALES */}

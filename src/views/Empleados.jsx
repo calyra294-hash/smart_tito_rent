@@ -7,6 +7,7 @@ import ModalEnvioCorreoEmpleados from "../components/empleados/ModalEnvioCorreoE
 import ModalRegistroEmpleado from "../components/empleados/ModalRegistroEmpleado";
 import ModalEdicionEmpleado from "../components/empleados/ModalEdicionEmpleado";
 import ModalEliminacionEmpleado from "../components/empleados/ModalEliminacionEmpleado";
+import TarjetaEmpleado from "../components/empleados/TarjetaEmpleado";
 import TablaEmpleado from "../components/empleados/TablaEmpleado";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
@@ -351,14 +352,30 @@ const Empleados = () => {
 
 
                     {cargando ? (
-                        <Spinner animation="border" />
-                    ) : (
-                        <TablaEmpleado
-                            empleados={empleados}
-                            abrirModalEdicion={abrirModalEdicion}
-                            abrirModalEliminacion={abrirModalEliminacion}
-                        />
-                    )}
+    <div className="text-center my-5">
+        <Spinner animation="border" variant="danger" />
+    </div>
+) : (
+    <>
+        {/* VISTA EN COMPUTADORA: Se muestra en pantallas medianas/grandes, en móvil se oculta */}
+        <div className="d-none d-md-block">
+            <TablaEmpleado
+                empleados={empleados}
+                abrirModalEdicion={abrirModalEdicion}
+                abrirModalEliminacion={abrirModalEliminacion}
+            />
+        </div>
+
+        {/* VISTA EN MÓVIL: Se muestra en pantallas chicas, en computadora se oculta */}
+        <div className="d-block d-md-none">
+            <TarjetaEmpleado
+                empleados={empleados}
+                abrirModalEdicion={abrirModalEdicion}
+                abrirModalEliminacion={abrirModalEliminacion}
+            />
+        </div>
+    </>
+)}
 
                     <ModalRegistroEmpleado
                         mostrarModal={mostrarModal}
