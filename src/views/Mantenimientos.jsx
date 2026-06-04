@@ -7,6 +7,7 @@ import ModalEdicionMantenimiento from "../components/mantenimientos/ModalEdicion
 import ModalEliminacionMantenimiento from "../components/mantenimientos/ModalEliminacionMantenimiento";
 import ModalDetalleMantenimiento from "../components/mantenimientos/ModalDetalleMantenimiento";
 import TablaMantenimientos from "../components/mantenimientos/TablaMantenimiento";
+import TarjetaMantenimiento from "../components/mantenimientos/TarjetaMantenimiento";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
 const Mantenimientos = () => {
@@ -236,16 +237,33 @@ const Mantenimientos = () => {
                 </Col>
             </Row>
             <hr />
-            {cargando ? (
-                <Spinner animation="border" />
-            ) : (
-                <TablaMantenimientos
-                    mantenimientos={mantenimientos}
-                    abrirModalEdicion={abrirModalEdicion}
-                    abrirModalEliminacion={abrirModalEliminacion}
-                    verDetalleMantenimiento={verDetalle}
-                />
-            )}
+           {cargando ? (
+    <div className="text-center my-5">
+        <Spinner animation="border" variant="danger" />
+    </div>
+) : (
+    <>
+        {/* VISTA EN COMPUTADORA: Se muestra de 'md' en adelante, en móvil se oculta */}
+        <div className="d-none d-md-block">
+            <TablaMantenimientos
+                mantenimientos={mantenimientos}
+                abrirModalEdicion={abrirModalEdicion}
+                abrirModalEliminacion={abrirModalEliminacion}
+                verDetalleMantenimiento={verDetalle}
+            />
+        </div>
+
+        {/* VISTA EN MÓVIL: Se muestra en pantallas chicas, de 'md' en adelante se oculta */}
+        <div className="d-block d-md-none">
+            <TarjetaMantenimiento
+                mantenimientos={mantenimientos}
+                abrirModalEdicion={abrirModalEdicion}
+                abrirModalEliminacion={abrirModalEliminacion}
+                verDetalleMantenimiento={verDetalle}
+            />
+        </div>
+    </>
+)}
             
             <ModalRegistroMantenimiento
                 mostrarModal={mostrarModal}

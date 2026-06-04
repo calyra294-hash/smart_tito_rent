@@ -294,3 +294,100 @@ tbody tr:hover {
     border-color: #ef4444;
     box-shadow: 0 0 10px rgba(239,68,68,.4);
 }
+
+/* ===== ESTILOS ESPECÍFICOS TARJETAS MANTENIMIENTO ===== */
+
+.contenedor-tarjetas-mantenimiento {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.tarjeta-mantenimiento-item {
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border-left: 5px solid transparent !important; /* Para resaltar el borde al pasar el mouse */
+}
+
+.tarjeta-mantenimiento-item:hover {
+    transform: translateX(5px);
+    border-left: 5px solid #ef4444 !important; /* Rojo del tema Titos */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.tarjeta-activa {
+    background-color: #fff5f5 !important; /* Un tono rojizo muy suave */
+    border-left: 5px solid #b91c1c !important;
+}
+
+/* Icono redondo */
+.icono-mantenimiento-contenedor {
+    width: 50px;
+    height: 50px;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+/* Capa que cubre la tarjeta al activarla */
+.tarjeta-mantenimiento-capa {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85); /* Fondo semitransparente */
+    backdrop-filter: blur(2px); /* Efecto borroso elegante */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    z-index: 10;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Contenedor de los botones Editar/Eliminar */
+.botones-acciones-flotantes {
+    display: flex;
+    gap: 15px;
+    padding: 10px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Ajustes para móviles */
+@media (max-width: 576px) {
+    .icono-mantenimiento-contenedor {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+}
+
+/* ===== ESTILOS PARA TARJETAS EN MÓVIL ===== */
+
+.tarjeta-mantenimiento-movil {
+    background-color: #ffffff;
+    border-left: 4px solid #b91c1c !important; /* Detalle rojo representativo de tu app */
+    transition: transform 0.2s ease;
+}
+
+.tarjeta-mantenimiento-movil:active {
+    transform: scale(0.98); /* Pequeño feedback táctil al pulsar en celular */
+}
+
+/* Espaciado para que no se pegue al borde de la pantalla en móviles */
+.lista-tarjetas-movil {
+    padding: 2px;
+}
