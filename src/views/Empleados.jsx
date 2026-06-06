@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
 import emailjs from "@emailjs/browser";
-
 import ModalEnvioCorreoEmpleados from "../components/empleados/ModalEnvioCorreoEmpleados";
 import ModalRegistroEmpleado from "../components/empleados/ModalRegistroEmpleado";
 import ModalEdicionEmpleado from "../components/empleados/ModalEdicionEmpleado";
@@ -330,7 +329,7 @@ const Empleados = () => {
                             </h3>
                         </Col>
                         <Col xs={2} sm={2} md={2} lg={2} className="text-end">
-                            <Button variant="primary" onClick={abrirModalCorreo} size="md">
+                            <Button variant="danger" onClick={abrirModalCorreo} size="md">
                                 <i className="bi bi-envelope"></i>
                                 <span className="d-none d-lg-inline ms-2">Enviar por Correo</span>
                             </Button>

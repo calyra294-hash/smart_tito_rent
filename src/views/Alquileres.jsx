@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
+import emailjs from "@emailjs/browser";
+import ModalEnvioCorreoAlquileres from "../components/alquileres/ModalEnvioCorreoAlquileres";
 
 import ModalRegistroAlquiler from "../components/alquileres/ModalRegistroAlquiler";
 import ModalEdicionAlquiler from "../components/alquileres/ModalEdicionAlquiler";
@@ -30,6 +32,10 @@ const Alquileres = () => {
         id_coche: "",
         precio_total: "",
     });
+
+    const [mostrarModalCorreo, setMostrarModalCorreo] = useState(false);
+    const [emailDestino, setEmailDestino] = useState("");
+    const [enviandoCorreo, setEnviandoCorreo] = useState(false);
 
     const [alquileres, setAlquileres] = useState([]);
     const [alquileresFiltrados, setAlquileresFiltrados] = useState([]);
@@ -165,6 +171,101 @@ const Alquileres = () => {
         }));
     };
 
+
+// /////////////// El coso de email ///////////////// //
+    useEffect(() => {
+    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
+}, []);
+
+const abrirModalCorreo = () => {
+    setEmailDestino("");
+    setMostrarModalCorreo(true);
+};
+
+const formatearAlquileresParaCorreo = () => {
+
+    if (alquileres.length === 0) {
+        return "No hay alquileres registrados.";
+    }
+
+    let texto = `LISTADO DE ALQUILERES\n\n`;
+    texto += `Fecha: ${new Date().toLocaleDateString("es-NI")}\n`;
+    texto += `Total de alquileres: ${alquileres.length}\n\n`;
+
+    alquileres.forEach((alquiler, index) => {
+
+        texto += `${index + 1}. Alquiler #${alquiler.id_alquiler}\n`;
+        texto += `   Fecha Inicio: ${alquiler.fecha_inicio}\n`;
+        texto += `   Fecha Fin: ${alquiler.fecha_fin}\n`;
+        texto += `   Estado: ${alquiler.estado}\n`;
+        texto += `\n`;
+
+    });
+
+    return texto;
+};
+
+const enviarCorreoAlquileres = () => {
+
+    if (!emailDestino.trim()) {
+
+        setToast({
+            mostrar: true,
+            mensaje: "Por favor ingresa un correo destino.",
+            tipo: "advertencia",
+        });
+
+        return;
+    }
+
+    setEnviandoCorreo(true);
+
+    const mensaje = formatearAlquileresParaCorreo();
+
+    const templateParams = {
+        to_name: "Administrador",
+        user_email: emailDestino,
+        message: mensaje,
+        fecha_envio: new Date().toLocaleDateString("es-NI"),
+    };
+
+    emailjs
+        .send(
+            import.meta.env.VITE_EMAILJS_SERVICE_ID,
+            import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+            templateParams
+        )
+        .then(() => {
+
+            setToast({
+                mostrar: true,
+                mensaje: "Correo enviado correctamente.",
+                tipo: "exito",
+            });
+
+            setMostrarModalCorreo(false);
+            setEmailDestino("");
+
+        })
+        .catch((error) => {
+
+            console.error("Error EmailJS:", error);
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al enviar el correo.",
+                tipo: "error",
+            });
+
+        })
+        .finally(() => {
+            setEnviandoCorreo(false);
+        });
+};
+
+
+
+
     // =========================
     // REGISTRAR
     // =========================
@@ -256,6 +357,7 @@ const Alquileres = () => {
             });
         }
     };
+
 
     // =========================
     // ACTUALIZAR
@@ -447,6 +549,15 @@ const verDetalleAlquiler = async (id_alquiler) => {
 
                         <Col className="text-end">
 
+                                <Button
+                                    variant="danger"
+                                    className="rounded-pill px-4 shadow-sm me-2"
+                                    onClick={abrirModalCorreo}
+                                >
+                                    <i className="bi bi-envelope-fill me-2"></i>
+                                    Enviar Correo
+                                </Button>
+
                             <Button
                                 variant="danger"
                                 className="rounded-pill px-4 shadow-sm"
@@ -551,6 +662,16 @@ const verDetalleAlquiler = async (id_alquiler) => {
                     setMostrarModalDetalle={setMostrarModalDetalle}
                     detalleAlquiler={detalleAlquiler}
                 />
+
+                    <ModalEnvioCorreoAlquileres
+                        mostrarModalCorreo={mostrarModalCorreo}
+                        setMostrarModalCorreo={setMostrarModalCorreo}
+                        emailDestino={emailDestino}
+                        setEmailDestino={setEmailDestino}
+                        enviandoCorreo={enviandoCorreo}
+                        enviarCorreoAlquileres={enviarCorreoAlquileres}
+                        totalAlquileres={alquileres.length}
+                    />
 
                 <NotificacionOperacion
                     mostrar={toast.mostrar}
