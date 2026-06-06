@@ -9,6 +9,9 @@ const Encabezado = () => {
     const navigate = useNavigate();
 
     const [usuarioLogueado, setUsuarioLogueado] = useState(false);
+    const [temaOscuro, setTemaOscuro] = useState(
+        localStorage.getItem("tema") === "dark"
+    );
 
     useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -23,6 +26,19 @@ const Encabezado = () => {
 
     return () => subscription.unsubscribe();
 }, []);
+
+    useEffect(() => {
+        if (temaOscuro) {
+            document.body.classList.add("dark-theme");
+        } else {
+            document.body.classList.remove("dark-theme");
+        }
+
+        localStorage.setItem(
+            "tema",
+            temaOscuro ? "dark" : "light"
+        );
+    }, [temaOscuro]);
 
     // =========================
     // NAVEGACIÓN
@@ -55,6 +71,10 @@ const Encabezado = () => {
         }
     };
 
+    const cambiarTema = () => {
+        setTemaOscuro(!temaOscuro);
+    };
+
     return (
         <>
 
@@ -75,15 +95,24 @@ const Encabezado = () => {
 
                 </div>
 
-                {usuarioLogueado && (
+                <div className="d-flex gap-2 align-items-center">
                     <button
-                        className="btn btn-danger btn-sm"
-                        onClick={cerrarSesion}
+                        className="btn btn-outline-light btn-sm"
+                        type="button"
+                        onClick={cambiarTema}
                     >
-                        <i className="bi bi-box-arrow-right me-2"></i>
-                        Cerrar sesión
+                        <i className={`bi ${temaOscuro ? "bi-moon-stars-fill" : "bi-sun-fill"}`}></i>
                     </button>
-                )}
+                    {usuarioLogueado && (
+                        <button
+                            className="btn btn-danger btn-sm"
+                            onClick={cerrarSesion}
+                        >
+                            <i className="bi bi-box-arrow-right me-2"></i>
+                            Cerrar sesión
+                        </button>
+                    )}
+                </div>
 
             </div>
 
