@@ -8,6 +8,7 @@ import ModalEdicionEmpleado from "../components/empleados/ModalEdicionEmpleado";
 import ModalEliminacionEmpleado from "../components/empleados/ModalEliminacionEmpleado";
 import TarjetaEmpleado from "../components/empleados/TarjetaEmpleado";
 import TablaEmpleado from "../components/empleados/TablaEmpleado";
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
 const Empleados = () => {
@@ -33,6 +34,8 @@ const Empleados = () => {
     });
 
     const [empleados, setEmpleados] = useState([]);
+    const [empleadosFiltrados, setEmpleadosFiltrados] = useState([]);
+    const [textoBusqueda, setTextoBusqueda] = useState("");
     const [cargando, setCargando] = useState(true);
 
     const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
@@ -86,6 +89,30 @@ const Empleados = () => {
     useEffect(() => {
         cargarEmpleados();
     }, []);
+
+    useEffect(() => {
+        const texto = textoBusqueda.toLowerCase();
+
+        setEmpleadosFiltrados(
+            empleados.filter((empleado) =>
+                [
+                    String(empleado.id_empleado),
+                    empleado.rol,
+                    empleado.primer_nombre,
+                    empleado.segundo_nombre,
+                    empleado.primer_apellido,
+                    empleado.segundo_apellido,
+                    empleado.direccion,
+                    empleado.email,
+                    empleado.fecha_contratacion,
+                    empleado.cedula,
+                ]
+                    .some((campo) =>
+                        campo?.toLowerCase().includes(texto)
+                    )
+            )
+        );
+    }, [textoBusqueda, empleados]);
 
     // Inicializar EmailJS
     useEffect(() => {
@@ -349,6 +376,15 @@ const Empleados = () => {
 
                     <hr />
 
+                    <Row className="mb-3">
+                        <Col xs={12} md={6} lg={4}>
+                            <CuadroBusquedas
+                                textoBusqueda={textoBusqueda}
+                                manejarCambioBusqueda={(e) => setTextoBusqueda(e.target.value)}
+                                placeholder="Buscar empleados..."
+                            />
+                        </Col>
+                    </Row>
 
                     {cargando ? (
     <div className="text-center my-5">
@@ -359,7 +395,7 @@ const Empleados = () => {
         {/* VISTA EN COMPUTADORA: Se muestra en pantallas medianas/grandes, en móvil se oculta */}
         <div className="d-none d-md-block">
             <TablaEmpleado
-                empleados={empleados}
+                empleados={empleadosFiltrados}
                 abrirModalEdicion={abrirModalEdicion}
                 abrirModalEliminacion={abrirModalEliminacion}
             />
@@ -368,7 +404,7 @@ const Empleados = () => {
         {/* VISTA EN MÓVIL: Se muestra en pantallas chicas, en computadora se oculta */}
         <div className="d-block d-md-none">
             <TarjetaEmpleado
-                empleados={empleados}
+                empleados={empleadosFiltrados}
                 abrirModalEdicion={abrirModalEdicion}
                 abrirModalEliminacion={abrirModalEliminacion}
             />

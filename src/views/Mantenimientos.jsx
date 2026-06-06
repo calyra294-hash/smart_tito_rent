@@ -8,6 +8,7 @@ import ModalEliminacionMantenimiento from "../components/mantenimientos/ModalEli
 import ModalDetalleMantenimiento from "../components/mantenimientos/ModalDetalleMantenimiento";
 import TablaMantenimientos from "../components/mantenimientos/TablaMantenimiento";
 import TarjetaMantenimiento from "../components/mantenimientos/TarjetaMantenimiento";
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
 const Mantenimientos = () => {
@@ -27,6 +28,8 @@ const Mantenimientos = () => {
     });
 
     const [mantenimientos, setMantenimientos] = useState([]);
+    const [mantenimientosFiltrados, setMantenimientosFiltrados] = useState([]);
+    const [textoBusqueda, setTextoBusqueda] = useState("");
     const [cargando, setCargando] = useState(true);
     const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
     const [mantenimientoAEliminar, setMantenimientoAEliminar] = useState(null);
@@ -66,6 +69,7 @@ const Mantenimientos = () => {
                 `);
             if (error) throw error;
             setMantenimientos(data || []);
+            setMantenimientosFiltrados(data || []);
         } catch (err) {
             console.error("Error en carga:", err);
         } finally {
@@ -77,6 +81,26 @@ const Mantenimientos = () => {
         cargarListas();
         cargarMantenimientos();
     }, []);
+
+    useEffect(() => {
+        const texto = textoBusqueda.toLowerCase();
+
+        setMantenimientosFiltrados(
+            mantenimientos.filter((m) => {
+                const detalleTexto = JSON.stringify(m.detalle_mantenimiento || "").toLowerCase();
+                return [
+                    String(m.id_mantenimiento),
+                    m.descripcion,
+                    m.justificacion,
+                    m.fecha_inicio,
+                    m.fecha_fin,
+                    String(m.costo),
+                    detalleTexto,
+                ]
+                    .some((campo) => campo?.toLowerCase().includes(texto));
+            })
+        );
+    }, [textoBusqueda, mantenimientos]);
 
     const manejoCambioInput = (e) => {
         const { name, value } = e.target;
@@ -130,10 +154,10 @@ const Mantenimientos = () => {
             setMostrarModal(false);
             setToast({ mostrar: true, mensaje: "¡Mantenimiento registrado con éxito!", tipo: "exito" });
             cargarMantenimientos();
-            
+
             // Limpiar formulario
             setNuevoMantenimiento({
-                descripcion: "", justificacion: "", fecha_inicio: "", 
+                descripcion: "", justificacion: "", fecha_inicio: "",
                 fecha_fin: "", costo: "", id_coche: "", id_empleado: ""
             });
 
@@ -213,97 +237,106 @@ const Mantenimientos = () => {
     return (
         <div className="contenido-principal">
             <div className="contenedor-dashboard">
-        <Container className="mt-3">
-            <Row className="align-items-center mb-3">
-                <Col>
-                    <h3 className="d-flex align-items-center">
-                        <i className="bi bi-tools me-2"></i> Mantenimientos
-                    </h3>
-                    <small className="text-muted">
-                                    Gestión de Mantenimientos
-                                </small>
-                </Col>
+                <Container className="mt-3">
+                    <Row className="align-items-center mb-3">
+                        <Col>
+                            <h3 className="d-flex align-items-center">
+                                <i className="bi bi-tools me-2"></i> Mantenimientos
+                            </h3>
+                            <small className="text-muted">
+                                Gestión de Mantenimientos
+                            </small>
+                        </Col>
 
-                <Col className="text-end">
+                        <Col className="text-end">
 
-                    <Button 
-                    variant="danger"
-                        className="rounded-pill px-4 shadow-sm"
-                                    onClick={() => setMostrarModal(true)}
-                    >
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Nuevo Mantenimiento
-                    </Button>
-                </Col>
-            </Row>
-            <hr />
-           {cargando ? (
-    <div className="text-center my-5">
-        <Spinner animation="border" variant="danger" />
-    </div>
-) : (
-    <>
-        {/* VISTA EN COMPUTADORA: Se muestra de 'md' en adelante, en móvil se oculta */}
-        <div className="d-none d-md-block">
-            <TablaMantenimientos
-                mantenimientos={mantenimientos}
-                abrirModalEdicion={abrirModalEdicion}
-                abrirModalEliminacion={abrirModalEliminacion}
-                verDetalleMantenimiento={verDetalle}
-            />
-        </div>
+                            <Button
+                                variant="danger"
+                                className="rounded-pill px-4 shadow-sm"
+                                onClick={() => setMostrarModal(true)}
+                            >
+                                <i className="bi bi-plus-circle me-2"></i>
+                                Nuevo Mantenimiento
+                            </Button>
+                        </Col>
+                    </Row>
+                    <hr />
+                    <Row className="mb-3">
+                        <Col xs={12} md={6} lg={4}>
+                            <CuadroBusquedas
+                                textoBusqueda={textoBusqueda}
+                                manejarCambioBusqueda={(e) => setTextoBusqueda(e.target.value)}
+                                placeholder="Buscar mantenimientos..."
+                            />
+                        </Col>
+                    </Row>
+                    {cargando ? (
+                        <div className="text-center my-5">
+                            <Spinner animation="border" variant="danger" />
+                        </div>
+                    ) : (
+                        <>
+                            {/* VISTA EN COMPUTADORA: Se muestra de 'md' en adelante, en móvil se oculta */}
+                            <div className="d-none d-md-block">
+                                <TablaMantenimientos
+                                    mantenimientos={mantenimientosFiltrados}
+                                    abrirModalEdicion={abrirModalEdicion}
+                                    abrirModalEliminacion={abrirModalEliminacion}
+                                    verDetalleMantenimiento={verDetalle}
+                                />
+                            </div>
 
-        {/* VISTA EN MÓVIL: Se muestra en pantallas chicas, de 'md' en adelante se oculta */}
-        <div className="d-block d-md-none">
-            <TarjetaMantenimiento
-                mantenimientos={mantenimientos}
-                abrirModalEdicion={abrirModalEdicion}
-                abrirModalEliminacion={abrirModalEliminacion}
-                verDetalleMantenimiento={verDetalle}
-            />
-        </div>
-    </>
-)}
-            
-            <ModalRegistroMantenimiento
-                mostrarModal={mostrarModal}
-                setMostrarModal={setMostrarModal}
-                nuevoMantenimiento={nuevoMantenimiento}
-                manejoCambioInput={manejoCambioInput}
-                agregarMantenimiento={agregarMantenimiento}
-                coches={coches}
-                empleados={empleados}
-            />
+                            {/* VISTA EN MÓVIL: Se muestra en pantallas chicas, de 'md' en adelante se oculta */}
+                            <div className="d-block d-md-none">
+                                <TarjetaMantenimiento
+                                    mantenimientos={mantenimientosFiltrados}
+                                    abrirModalEdicion={abrirModalEdicion}
+                                    abrirModalEliminacion={abrirModalEliminacion}
+                                    verDetalleMantenimiento={verDetalle}
+                                />
+                            </div>
+                        </>
+                    )}
 
-            <ModalEdicionMantenimiento
-                mostrarModalEdicion={mostrarModalEdicion}
-                setMostrarModalEdicion={setMostrarModalEdicion}
-                mantenimientoEditar={mantenimientoEditar}
-                manejoCambioInputEdicion={manejoCambioInputEdicion}
-                actualizarMantenimiento={actualizarMantenimiento}
-            />
+                    <ModalRegistroMantenimiento
+                        mostrarModal={mostrarModal}
+                        setMostrarModal={setMostrarModal}
+                        nuevoMantenimiento={nuevoMantenimiento}
+                        manejoCambioInput={manejoCambioInput}
+                        agregarMantenimiento={agregarMantenimiento}
+                        coches={coches}
+                        empleados={empleados}
+                    />
 
-            <ModalEliminacionMantenimiento
-                mostrarModalEliminacion={mostrarModalEliminacion}
-                setMostrarModalEliminacion={setMostrarModalEliminacion}
-                eliminarMantenimiento={eliminarMantenimiento}
-                mantenimientoAEliminar={mantenimientoAEliminar}
-            />
+                    <ModalEdicionMantenimiento
+                        mostrarModalEdicion={mostrarModalEdicion}
+                        setMostrarModalEdicion={setMostrarModalEdicion}
+                        mantenimientoEditar={mantenimientoEditar}
+                        manejoCambioInputEdicion={manejoCambioInputEdicion}
+                        actualizarMantenimiento={actualizarMantenimiento}
+                    />
 
-            <ModalDetalleMantenimiento
-                mostrarModalDetalle={mostrarModalDetalle}
-                setMostrarModalDetalle={setMostrarModalDetalle}
-                detalleMantenimiento={detalleMantenimiento}
-            />
+                    <ModalEliminacionMantenimiento
+                        mostrarModalEliminacion={mostrarModalEliminacion}
+                        setMostrarModalEliminacion={setMostrarModalEliminacion}
+                        eliminarMantenimiento={eliminarMantenimiento}
+                        mantenimientoAEliminar={mantenimientoAEliminar}
+                    />
 
-            <NotificacionOperacion
-                mostrar={toast.mostrar}
-                mensaje={toast.mensaje}
-                tipo={toast.tipo}
-                onCerrar={() => setToast({ ...toast, mostrar: false })}
-            />
-        </Container>
-        </div>
+                    <ModalDetalleMantenimiento
+                        mostrarModalDetalle={mostrarModalDetalle}
+                        setMostrarModalDetalle={setMostrarModalDetalle}
+                        detalleMantenimiento={detalleMantenimiento}
+                    />
+
+                    <NotificacionOperacion
+                        mostrar={toast.mostrar}
+                        mensaje={toast.mensaje}
+                        tipo={toast.tipo}
+                        onCerrar={() => setToast({ ...toast, mostrar: false })}
+                    />
+                </Container>
+            </div>
         </div>
     );
 };
