@@ -391,3 +391,22 @@ tbody tr:hover {
 .lista-tarjetas-movil {
     padding: 2px;
 }
+
+
+.sidebar {
+    width: 220px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-colapsado {
+    width: 70px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-colapsado .sidebar-link {
+    justify-content: center;
+}

@@ -8,6 +8,8 @@ const Encabezado = () => {
 
     const navigate = useNavigate();
 
+    
+
     const [usuarioLogueado, setUsuarioLogueado] = useState(false);
 
     useEffect(() => {
