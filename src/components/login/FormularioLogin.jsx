@@ -1,6 +1,9 @@
 import React from "react";
+import { useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Form, Button, Card, Alert } from "react-bootstrap";
-import logo from "../../assets/logo-titos.png"; 
+import logo from "../../assets/logo-titos.png";
+
 
 const FormularioLogin = ({
     usuario,
@@ -10,6 +13,9 @@ const FormularioLogin = ({
     setContrasena,
     iniciarSesion,
 }) => {
+
+    const [mostrarContrasena, setMostrarContrasena] = useState(false);
+
     return (
         <Card
             className="login-card"
@@ -50,12 +56,30 @@ const FormularioLogin = ({
 
                     <Form.Group className="mb-4">
                         <Form.Label>Contraseña</Form.Label>
-                        <Form.Control
-                            type="password"
-                            placeholder="Ingresa tu contraseña"
-                            value={contrasena}
-                            onChange={(e) => setContrasena(e.target.value)}
-                        />
+
+                        <div className="position-relative">
+                            <Form.Control
+                                type={mostrarContrasena ? "text" : "password"}
+                                placeholder="Ingresa tu contraseña"
+                                value={contrasena}
+                                onChange={(e) => setContrasena(e.target.value)}
+                                style={{ paddingRight: "45px" }}
+                            />
+
+                            <span
+                                onClick={() => setMostrarContrasena(!mostrarContrasena)}
+                                style={{
+                                    position: "absolute",
+                                    top: "50%",
+                                    right: "15px",
+                                    transform: "translateY(-50%)",
+                                    cursor: "pointer",
+                                    color: "#6c757d"
+                                }}
+                            >
+                                {mostrarContrasena ? <FaEyeSlash /> : <FaEye />}
+                            </span>
+                        </div>
                     </Form.Group>
 
                     <Button

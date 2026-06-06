@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Nav } from "react-bootstrap";
 import logo from "../../assets/logo-titos.png";
@@ -7,6 +7,22 @@ import { supabase } from "../../database/supabaseconfig";
 const Encabezado = () => {
 
     const navigate = useNavigate();
+
+    const [usuarioLogueado, setUsuarioLogueado] = useState(false);
+
+    useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+        setUsuarioLogueado(!!data.session);
+    });
+
+    const {
+        data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUsuarioLogueado(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+}, []);
 
     // =========================
     // NAVEGACIÓN
@@ -59,13 +75,15 @@ const Encabezado = () => {
 
                 </div>
 
-                <button
-                    className="btn btn-danger btn-sm"
-                    onClick={cerrarSesion}
-                >
-                    <i className="bi bi-box-arrow-right me-2"></i>
-                    Cerrar sesión
-                </button>
+                {usuarioLogueado && (
+                    <button
+                        className="btn btn-danger btn-sm"
+                        onClick={cerrarSesion}
+                    >
+                        <i className="bi bi-box-arrow-right me-2"></i>
+                        Cerrar sesión
+                    </button>
+                )}
 
             </div>
 
