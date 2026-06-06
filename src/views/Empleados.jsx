@@ -350,29 +350,33 @@ const Empleados = () => {
 
 
                     <Row className="align-items-center mb-3">
-                        <Col xs={8} sm={8} md={8} lg={8} className="d-flex align-items-center">
-                            <h3 className="mb-0">
-                                <i className="bi bi-people-fill me-2"></i> Empleados
+                        <Col>
+                            <h3 className="fw-bold mb-0">
+                                <i className="bi bi-people-fill me-2 text-danger"></i>
+                                Empleados
                             </h3>
                         </Col>
-                        <Col xs={2} sm={2} md={2} lg={2} className="text-end">
-                            <Button variant="danger" onClick={abrirModalCorreo} size="md">
-                                <i className="bi bi-envelope"></i>
-                                <span className="d-none d-lg-inline ms-2">Enviar por Correo</span>
-                            </Button>
-                        </Col>
-                        <Col xs={2} sm={2} md={2} lg={2} className="text-end">
+
+                        <Col className="text-end">
                             <Button
                                 variant="danger"
-                                onClick={() => setMostrarModal(true)}
-                                size="md"
+                                className="rounded-pill px-4 shadow-sm me-2"
+                                onClick={abrirModalCorreo}
                             >
-                                <i className="bi-plus-lg"></i>
-                                <span className="d-none d-lg-inline ms-2">Nuevo Empleado</span>
+                                <i className="bi bi-envelope-fill me-2"></i>
+                                Enviar por Correo
+                            </Button>
+
+                            <Button
+                                variant="danger"
+                                className="rounded-pill px-4 shadow-sm"
+                                onClick={() => setMostrarModal(true)}
+                            >
+                                <i className="bi bi-plus-circle me-2"></i>
+                                Nuevo Empleado
                             </Button>
                         </Col>
                     </Row>
-
 
                     <hr />
 
