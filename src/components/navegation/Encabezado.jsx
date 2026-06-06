@@ -179,6 +179,14 @@ const Encabezado = () => {
                         Mantenimientos
                     </Nav.Link>
 
+                    <Nav.Link
+                        onClick={() => manejarNavegacion("/dashboard")}
+                        className="sidebar-link"
+                    >
+                        <i className="bi bi-person-badge-fill me-2"></i>
+                        Dashboard
+                    </Nav.Link>
+
                 </Nav>
 
             </div>
