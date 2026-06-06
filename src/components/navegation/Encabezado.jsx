@@ -8,24 +8,26 @@ const Encabezado = () => {
 
     const navigate = useNavigate();
 
+
+
     const [usuarioLogueado, setUsuarioLogueado] = useState(false);
-    const [temaOscuro, setTemaOscuro] = useState(
-        localStorage.getItem("tema") === "dark"
-    );
+    const [temaOscuro, setTemaOscuro] = useState(() => {
+        return localStorage.getItem("tema") === "dark";
+    });
 
     useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-        setUsuarioLogueado(!!data.session);
-    });
+        supabase.auth.getSession().then(({ data }) => {
+            setUsuarioLogueado(!!data.session);
+        });
 
-    const {
-        data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUsuarioLogueado(!!session);
-    });
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUsuarioLogueado(!!session);
+        });
 
-    return () => subscription.unsubscribe();
-}, []);
+        return () => subscription.unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (temaOscuro) {
@@ -72,7 +74,7 @@ const Encabezado = () => {
     };
 
     const cambiarTema = () => {
-        setTemaOscuro(!temaOscuro);
+        setTemaOscuro((prev) => !prev);
     };
 
     return (
@@ -167,14 +169,6 @@ const Encabezado = () => {
                     >
                         <i className="bi bi-person-badge-fill me-2"></i>
                         Empleados
-                    </Nav.Link>
-
-                    <Nav.Link
-                        onClick={() => manejarNavegacion("/dashboard")}
-                        className="sidebar-link"
-                    >
-                        <i className="bi bi-person-badge-fill me-2"></i>
-                        Dashboard
                     </Nav.Link>
 
                     <Nav.Link

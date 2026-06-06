@@ -435,9 +435,7 @@ tbody tr:hover {
     padding: 2px;
 }
 
-/* =========================
-   TABLAS MODO OSCURO
-========================== */
+/* =========================TABLAS MODO OSCURO========================== */
 
 .dark-theme .table {
     background-color: var(--bg-card) !important;
@@ -468,9 +466,7 @@ tbody tr:hover {
     border-color: var(--border-color) !important;
 }
 
-/* =========================
-   INPUTS
-========================== */
+/* =========================INPUTS========================== */
 
 .dark-theme .form-control,
 .dark-theme .form-select {
@@ -491,9 +487,7 @@ tbody tr:hover {
     box-shadow: 0 0 8px rgba(239, 68, 68, .4);
 }
 
-/* =========================
-   MODALES
-========================== */
+/* =========================MODALES========================== */
 
 .dark-theme .modal-content {
     background-color: var(--bg-card);
@@ -509,9 +503,7 @@ tbody tr:hover {
     color: var(--text-primary);
 }
 
-/* =========================
-   CARDS
-========================== */
+/* =========================CARDS========================== */
 
 .dark-theme .card {
     background-color: var(--bg-card) !important;
@@ -528,12 +520,10 @@ tbody tr:hover {
     color: var(--text-primary);
 }
 
-/* =========================
-   BADGES
-========================== */
+/* =========================BADGES========================== */
 
 .dark-theme .badge {
-    box-shadow: 0 0 8px rgba(255,255,255,.15);
+    box-shadow: 0 0 8px rgba(255, 255, 255, .15);
 }
 
 .dark-theme .bg-primary {
@@ -553,10 +543,7 @@ tbody tr:hover {
     background-color: #ea4335 !important;
 }
 
-/* =========================
-   TARJETAS DE MANTENIMIENTO
-========================== */
-
+/* =========================TARJETAS DE MANTENIMIENTO========================== */
 .dark-theme .tarjeta-mantenimiento-item {
     background-color: var(--bg-card) !important;
     color: var(--text-primary) !important;
@@ -576,9 +563,7 @@ tbody tr:hover {
     background-color: var(--bg-card);
 }
 
-/* =========================
-   CONTENEDORES PRINCIPALES
-========================== */
+/* =========================CONTENEDORES PRINCIPALES========================== */
 
 .dark-theme .contenedor-dashboard {
     background-color: var(--bg-card);
@@ -642,5 +627,24 @@ tbody tr:hover {
 
 .dark-theme .card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0,0,0,.5) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .5) !important;
 }
+
+.sidebar {
+    width: 220px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-colapsado {
+    width: 70px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-colapsado .sidebar-link {
+    justify-content: center;
+}
+
