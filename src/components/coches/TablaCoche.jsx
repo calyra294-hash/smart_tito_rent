@@ -49,7 +49,7 @@ const TablaCoche = ({
 
                         <tr>
 
-                            <th>#</th>
+                            <th>ID</th>
 
                             <th>Imagen</th>
 

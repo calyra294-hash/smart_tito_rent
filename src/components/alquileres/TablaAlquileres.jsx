@@ -60,7 +60,7 @@ const TablaAlquileres = ({
 
                         <tr>
 
-                            <th>#</th>
+                            <th>ID</th>
 
                             <th>Fecha Inicio</th>
 

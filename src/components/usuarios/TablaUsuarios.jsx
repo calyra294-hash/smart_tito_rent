@@ -30,7 +30,7 @@ const TablaUsuarios = ({
 
                         <tr>
 
-                            <th>#</th>
+                            <th>ID</th>
 
                             <th>Rol</th>
 
