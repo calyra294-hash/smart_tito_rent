@@ -30,7 +30,9 @@ const Alquileres = () => {
         estado: "En espera",
         id_usuario: "",
         id_coche: "",
-        precio_total: "",
+        valor_dia: 0,
+        cantidad_dias: 0,
+        precio_total: 0,
     });
 
     const [mostrarModalCorreo, setMostrarModalCorreo] = useState(false);
@@ -172,98 +174,147 @@ const Alquileres = () => {
     };
 
 
-// /////////////// El coso de email ///////////////// //
+    // /////////////// El coso de email ///////////////// //
     useEffect(() => {
-    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
-}, []);
+        emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
+    }, []);
 
-const abrirModalCorreo = () => {
-    setEmailDestino("");
-    setMostrarModalCorreo(true);
-};
-
-const formatearAlquileresParaCorreo = () => {
-
-    if (alquileres.length === 0) {
-        return "No hay alquileres registrados.";
-    }
-
-    let texto = `LISTADO DE ALQUILERES\n\n`;
-    texto += `Fecha: ${new Date().toLocaleDateString("es-NI")}\n`;
-    texto += `Total de alquileres: ${alquileres.length}\n\n`;
-
-    alquileres.forEach((alquiler, index) => {
-
-        texto += `${index + 1}. Alquiler #${alquiler.id_alquiler}\n`;
-        texto += `   Fecha Inicio: ${alquiler.fecha_inicio}\n`;
-        texto += `   Fecha Fin: ${alquiler.fecha_fin}\n`;
-        texto += `   Estado: ${alquiler.estado}\n`;
-        texto += `\n`;
-
-    });
-
-    return texto;
-};
-
-const enviarCorreoAlquileres = () => {
-
-    if (!emailDestino.trim()) {
-
-        setToast({
-            mostrar: true,
-            mensaje: "Por favor ingresa un correo destino.",
-            tipo: "advertencia",
-        });
-
-        return;
-    }
-
-    setEnviandoCorreo(true);
-
-    const mensaje = formatearAlquileresParaCorreo();
-
-    const templateParams = {
-        to_name: "Administrador",
-        user_email: emailDestino,
-        message: mensaje,
-        fecha_envio: new Date().toLocaleDateString("es-NI"),
+    const abrirModalCorreo = () => {
+        setEmailDestino("");
+        setMostrarModalCorreo(true);
     };
 
-    emailjs
-        .send(
-            import.meta.env.VITE_EMAILJS_SERVICE_ID,
-            import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-            templateParams
-        )
-        .then(() => {
+    const formatearAlquileresParaCorreo = () => {
 
-            setToast({
-                mostrar: true,
-                mensaje: "Correo enviado correctamente.",
-                tipo: "exito",
-            });
+        if (alquileres.length === 0) {
+            return "No hay alquileres registrados.";
+        }
 
-            setMostrarModalCorreo(false);
-            setEmailDestino("");
+        let texto = `LISTADO DE ALQUILERES\n\n`;
+        texto += `Fecha: ${new Date().toLocaleDateString("es-NI")}\n`;
+        texto += `Total de alquileres: ${alquileres.length}\n\n`;
 
-        })
-        .catch((error) => {
+        alquileres.forEach((alquiler, index) => {
 
-            console.error("Error EmailJS:", error);
+            texto += `${index + 1}. Alquiler #${alquiler.id_alquiler}\n`;
+            texto += `   Fecha Inicio: ${alquiler.fecha_inicio}\n`;
+            texto += `   Fecha Fin: ${alquiler.fecha_fin}\n`;
+            texto += `   Estado: ${alquiler.estado}\n`;
+            texto += `\n`;
 
-            setToast({
-                mostrar: true,
-                mensaje: "Error al enviar el correo.",
-                tipo: "error",
-            });
-
-        })
-        .finally(() => {
-            setEnviandoCorreo(false);
         });
-};
 
+        return texto;
+    };
 
+    const enviarCorreoAlquileres = () => {
+
+        if (!emailDestino.trim()) {
+
+            setToast({
+                mostrar: true,
+                mensaje: "Por favor ingresa un correo destino.",
+                tipo: "advertencia",
+            });
+
+            return;
+        }
+
+        setEnviandoCorreo(true);
+
+        const mensaje = formatearAlquileresParaCorreo();
+
+        const templateParams = {
+            to_name: "Administrador",
+            user_email: emailDestino,
+            message: mensaje,
+            fecha_envio: new Date().toLocaleDateString("es-NI"),
+        };
+
+        emailjs
+            .send(
+                import.meta.env.VITE_EMAILJS_SERVICE_ID,
+                import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+                templateParams
+            )
+            .then(() => {
+
+                setToast({
+                    mostrar: true,
+                    mensaje: "Correo enviado correctamente.",
+                    tipo: "exito",
+                });
+
+                setMostrarModalCorreo(false);
+                setEmailDestino("");
+
+            })
+            .catch((error) => {
+
+                console.error("Error EmailJS:", error);
+
+                setToast({
+                    mostrar: true,
+                    mensaje: "Error al enviar el correo.",
+                    tipo: "error",
+                });
+
+            })
+            .finally(() => {
+                setEnviandoCorreo(false);
+            });
+    };
+
+    useEffect(() => {
+
+    if (
+        nuevoAlquiler.id_coche &&
+        nuevoAlquiler.fecha_inicio &&
+        nuevoAlquiler.fecha_fin
+    ) {
+
+        const cocheSeleccionado = coches.find(
+            c => c.id_coche === Number(nuevoAlquiler.id_coche)
+        );
+
+        if (!cocheSeleccionado) return;
+
+        const valorDia = Number(cocheSeleccionado.valor_dia);
+
+        const inicio = new Date(nuevoAlquiler.fecha_inicio);
+        const fin = new Date(nuevoAlquiler.fecha_fin);
+
+        // 👇 PONLO AQUÍ
+        if (fin < inicio) {
+            setNuevoAlquiler(prev => ({
+                ...prev,
+                cantidad_dias: 0,
+                precio_total: 0
+            }));
+            return;
+        }
+
+        const cantidadDias =
+            Math.floor(
+                (fin - inicio) / (1000 * 60 * 60 * 24)
+            ) + 1;
+
+        const precioTotal = valorDia * cantidadDias;
+
+        setNuevoAlquiler(prev => ({
+            ...prev,
+            valor_dia: valorDia,
+            cantidad_dias: cantidadDias,
+            precio_total: precioTotal,
+        }));
+    }
+
+}, [
+    nuevoAlquiler.id_coche,
+    nuevoAlquiler.fecha_inicio,
+    nuevoAlquiler.fecha_fin,
+    coches
+]);
 
 
     // =========================
@@ -313,6 +364,8 @@ const enviarCorreoAlquileres = () => {
                         id_alquiler: idAlquiler,
                         id_usuario: parseInt(nuevoAlquiler.id_usuario),
                         id_coche: parseInt(nuevoAlquiler.id_coche),
+                        valor_dia: parseFloat(nuevoAlquiler.valor_dia),
+                        cantidad_dias: parseInt(nuevoAlquiler.cantidad_dias),
                         precio_total: parseFloat(nuevoAlquiler.precio_total),
                     },
                 ]);
@@ -334,7 +387,9 @@ const enviarCorreoAlquileres = () => {
                 estado: "En espera",
                 id_usuario: "",
                 id_coche: "",
-                precio_total: "",
+                valor_dia: 0,
+                cantidad_dias: 0,
+                precio_total: 0,
             });
 
             cargarAlquileres();
@@ -400,115 +455,117 @@ const enviarCorreoAlquileres = () => {
     };
 
     // =========================
-// ELIMINAR
-// =========================
-const eliminarAlquiler = async () => {
+    // ELIMINAR
+    // =========================
+    const eliminarAlquiler = async () => {
 
-    try {
+        try {
 
-        if (!alquilerAEliminar?.id_alquiler) return;
+            if (!alquilerAEliminar?.id_alquiler) return;
 
-        // buscar coche relacionado
-        const { data: detalle } = await supabase
-            .from("detalle_alquiler")
-            .select("id_coche")
-            .eq("id_alquiler", alquilerAEliminar.id_alquiler)
-            .single();
+            // buscar coche relacionado
+            const { data: detalle } = await supabase
+                .from("detalle_alquiler")
+                .select("id_coche")
+                .eq("id_alquiler", alquilerAEliminar.id_alquiler)
+                .single();
 
-        // cambiar estado del coche a disponible
-        if (detalle) {
+            // cambiar estado del coche a disponible
+            if (detalle) {
 
+                await supabase
+                    .from("coche")
+                    .update({
+                        estado: "Disponible",
+                    })
+                    .eq("id_coche", detalle.id_coche);
+            }
+
+            // eliminar detalle
             await supabase
-                .from("coche")
-                .update({
-                    estado: "Disponible",
-                })
-                .eq("id_coche", detalle.id_coche);
+                .from("detalle_alquiler")
+                .delete()
+                .eq("id_alquiler", alquilerAEliminar.id_alquiler);
+
+            // eliminar alquiler
+            const { error } = await supabase
+                .from("alquiler")
+                .delete()
+                .eq("id_alquiler", alquilerAEliminar.id_alquiler);
+
+            if (error) throw error;
+
+            setMostrarModalEliminacion(false);
+
+            cargarAlquileres();
+            cargarDatos();
+
+            setToast({
+                mostrar: true,
+                mensaje: "Alquiler eliminado correctamente",
+                tipo: "exito",
+            });
+
+        } catch (error) {
+
+            console.log(error);
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al eliminar alquiler",
+                tipo: "error",
+            });
         }
-
-        // eliminar detalle
-        await supabase
-            .from("detalle_alquiler")
-            .delete()
-            .eq("id_alquiler", alquilerAEliminar.id_alquiler);
-
-        // eliminar alquiler
-        const { error } = await supabase
-            .from("alquiler")
-            .delete()
-            .eq("id_alquiler", alquilerAEliminar.id_alquiler);
-
-        if (error) throw error;
-
-        setMostrarModalEliminacion(false);
-
-        cargarAlquileres();
-        cargarDatos();
-
-        setToast({
-            mostrar: true,
-            mensaje: "Alquiler eliminado correctamente",
-            tipo: "exito",
-        });
-
-    } catch (error) {
-
-        console.log(error);
-
-        setToast({
-            mostrar: true,
-            mensaje: "Error al eliminar alquiler",
-            tipo: "error",
-        });
-    }
-};
+    };
 
     // =========================
     // VER DETALLE
     // =========================
-const verDetalleAlquiler = async (id_alquiler) => {
+    const verDetalleAlquiler = async (id_alquiler) => {
 
-    try {
+        try {
 
-        const { data, error } = await supabase
-            .from("detalle_alquiler")
-            .select(`
-                id_detalle_alquiler,
-                id_usuario,
-                id_coche,
-                precio_total,
+            const { data, error } = await supabase
+                .from("detalle_alquiler")
+                .select(`
+    id_detalle_alquiler,
+    id_usuario,
+    id_coche,
+    valor_dia,
+    cantidad_dias,
+    precio_total,
 
-                usuario:id_usuario (
-                    nombre1,
-                    apellido1
-                ),
+    usuario:id_usuario (
+        nombre1,
+        apellido1
+    ),
 
-                coche:id_coche (
-                    marca,
-                    modelo
-                )
-            `)
-            .eq("id_alquiler", id_alquiler);
+    coche:id_coche (
+        marca,
+        modelo
+    )
+`)
+                .eq("id_alquiler", id_alquiler);
 
-        if (error) throw error;
+            if (error) throw error;
 
-        console.log(data);
+            console.log(data);
 
-        setDetalleAlquiler(data || []);
+            setDetalleAlquiler(data || []);
 
-        setMostrarModalDetalle(true);
+            setMostrarModalDetalle(true);
 
-    } catch (error) {
+        } catch (error) {
 
-        console.log(error);
+            console.log(error);
 
-        setToast({
-            mostrar: true,
-            mensaje: "Error al cargar detalles",
-            tipo: "error",
-        });
-    }
-};
+            setToast({
+                mostrar: true,
+                mensaje: "Error al cargar detalles",
+                tipo: "error",
+            });
+        }
+    };
 
     const abrirModalEdicion = (alquiler) => {
 
@@ -525,29 +582,29 @@ const verDetalleAlquiler = async (id_alquiler) => {
     return (
 
         <div className="contenido-principal">
-            <div className="contenedor-dashboard"> 
+            <div className="contenedor-dashboard">
 
-            <Container fluid>
+                <Container fluid>
 
-                <div className="dashboard-card mb-4">
+                    <div className="dashboard-card mb-4">
 
-                    <Row className="align-items-center mb-3">
-                    
+                        <Row className="align-items-center mb-3">
 
-                        <Col>
 
-                            <h3 className="fw-bold mb-0">
-                                <i className="bi bi-calendar-check-fill me-2 text-danger"></i>
-                                Alquileres
-                            </h3>
+                            <Col>
 
-                            <small className="text-muted">
-                                Gestión de alquileres registrados
-                            </small>
+                                <h3 className="fw-bold mb-0">
+                                    <i className="bi bi-calendar-check-fill me-2 text-danger"></i>
+                                    Alquileres
+                                </h3>
 
-                        </Col>
+                                <small className="text-muted">
+                                    Gestión de alquileres registrados
+                                </small>
 
-                        <Col className="text-end">
+                            </Col>
+
+                            <Col className="text-end">
 
                                 <Button
                                     variant="danger"
@@ -558,110 +615,110 @@ const verDetalleAlquiler = async (id_alquiler) => {
                                     Enviar Correo
                                 </Button>
 
-                            <Button
-                                variant="danger"
-                                className="rounded-pill px-4 shadow-sm"
-                                onClick={() => setMostrarModal(true)}
-                            >
-                                <i className="bi bi-plus-circle me-2"></i>
-                                Nuevo Alquiler
-                            </Button>
+                                <Button
+                                    variant="danger"
+                                    className="rounded-pill px-4 shadow-sm"
+                                    onClick={() => setMostrarModal(true)}
+                                >
+                                    <i className="bi bi-plus-circle me-2"></i>
+                                    Nuevo Alquiler
+                                </Button>
 
-                        </Col>
+                            </Col>
 
-                    </Row>
+                        </Row>
 
-                </div>
-                <hr />
+                    </div>
+                    <hr />
 
-                <div className="dashboard-card mb-4">
+                    <div className="dashboard-card mb-4">
 
-                    <Row>
+                        <Row>
 
-                        <Col md={5}>
+                            <Col md={5}>
 
-                            <CuadroBusquedas
-                                textoBusqueda={textoBusqueda}
-                                manejarCambioBusqueda={(e) =>
-                                    setTextoBusqueda(e.target.value)
-                                }
-                                placeholder="Buscar alquiler..."
-                            />
+                                <CuadroBusquedas
+                                    textoBusqueda={textoBusqueda}
+                                    manejarCambioBusqueda={(e) =>
+                                        setTextoBusqueda(e.target.value)
+                                    }
+                                    placeholder="Buscar alquiler..."
+                                />
 
-                        </Col>
+                            </Col>
 
-                    </Row>
+                        </Row>
 
-                </div>
+                    </div>
 
-                <div className="dashboard-card">
+                    <div className="dashboard-card">
 
-                   {/* ... resto de tu código igual ... */}
+                        {/* ... resto de tu código igual ... */}
 
-<div className="dashboard-card">
-    {cargando ? (
-        <div className="text-center p-5">
-            <Spinner animation="border" variant="success" />
-        </div>
-    ) : (
-        <>
-            {/* VISTA DE ESCRITORIO (PC): Oculta en móviles */}
-            <div className="d-none d-md-block">
-                <TablaAlquileres
-                    alquileres={alquileresFiltrados}
-                    abrirModalEdicion={abrirModalEdicion}
-                    abrirModalEliminacion={abrirModalEliminacion}
-                    verDetalleAlquiler={verDetalleAlquiler} // <-- Agregado aquí también por si acaso
-                />
-            </div>
+                        <div className="dashboard-card">
+                            {cargando ? (
+                                <div className="text-center p-5">
+                                    <Spinner animation="border" variant="success" />
+                                </div>
+                            ) : (
+                                <>
+                                    {/* VISTA DE ESCRITORIO (PC): Oculta en móviles */}
+                                    <div className="d-none d-md-block">
+                                        <TablaAlquileres
+                                            alquileres={alquileresFiltrados}
+                                            abrirModalEdicion={abrirModalEdicion}
+                                            abrirModalEliminacion={abrirModalEliminacion}
+                                            verDetalleAlquiler={verDetalleAlquiler} // <-- Agregado aquí también por si acaso
+                                        />
+                                    </div>
 
-            {/* VISTA MÓVIL: Visible en smartphones */}
-            <div className="d-block d-md-none">
-                <TarjetaAlquiler
-                    alquileres={alquileresFiltrados}
-                    abrirModalEdicion={abrirModalEdicion}
-                    abrirModalEliminacion={abrirModalEliminacion}
-                    verDetalleAlquiler={verDetalleAlquiler} // <-- ¡Solucionado!
-                />
-            </div>
-        </>
-    )}
-</div>
+                                    {/* VISTA MÓVIL: Visible en smartphones */}
+                                    <div className="d-block d-md-none">
+                                        <TarjetaAlquiler
+                                            alquileres={alquileresFiltrados}
+                                            abrirModalEdicion={abrirModalEdicion}
+                                            abrirModalEliminacion={abrirModalEliminacion}
+                                            verDetalleAlquiler={verDetalleAlquiler} // <-- ¡Solucionado!
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
-{/* ... resto de los modales igual ... */}
+                        {/* ... resto de los modales igual ... */}
 
-                </div>
+                    </div>
 
-                <ModalRegistroAlquiler
-                    mostrarModal={mostrarModal}
-                    setMostrarModal={setMostrarModal}
-                    nuevoAlquiler={nuevoAlquiler}
-                    manejoCambioInput={manejoCambioInput}
-                    agregarAlquiler={agregarAlquiler}
-                    usuarios={usuarios}
-                    coches={coches}
-                />
+                    <ModalRegistroAlquiler
+                        mostrarModal={mostrarModal}
+                        setMostrarModal={setMostrarModal}
+                        nuevoAlquiler={nuevoAlquiler}
+                        manejoCambioInput={manejoCambioInput}
+                        agregarAlquiler={agregarAlquiler}
+                        usuarios={usuarios}
+                        coches={coches}
+                    />
 
-                <ModalEdicionAlquiler
-                    mostrarModalEdicion={mostrarModalEdicion}
-                    setMostrarModalEdicion={setMostrarModalEdicion}
-                    alquilerEditar={alquilerEditar}
-                    manejoCambioInputEdicion={manejoCambioInputEdicion}
-                    actualizarAlquiler={actualizarAlquiler}
-                />
+                    <ModalEdicionAlquiler
+                        mostrarModalEdicion={mostrarModalEdicion}
+                        setMostrarModalEdicion={setMostrarModalEdicion}
+                        alquilerEditar={alquilerEditar}
+                        manejoCambioInputEdicion={manejoCambioInputEdicion}
+                        actualizarAlquiler={actualizarAlquiler}
+                    />
 
-                <ModalEliminacionAlquiler
-                    mostrarModalEliminacion={mostrarModalEliminacion}
-                    setMostrarModalEliminacion={setMostrarModalEliminacion}
-                    eliminarAlquiler={eliminarAlquiler}
-                    alquilerAEliminar={alquilerAEliminar}
-                />
+                    <ModalEliminacionAlquiler
+                        mostrarModalEliminacion={mostrarModalEliminacion}
+                        setMostrarModalEliminacion={setMostrarModalEliminacion}
+                        eliminarAlquiler={eliminarAlquiler}
+                        alquilerAEliminar={alquilerAEliminar}
+                    />
 
-                <ModalDetalleAlquiler
-                    mostrarModalDetalle={mostrarModalDetalle}
-                    setMostrarModalDetalle={setMostrarModalDetalle}
-                    detalleAlquiler={detalleAlquiler}
-                />
+                    <ModalDetalleAlquiler
+                        mostrarModalDetalle={mostrarModalDetalle}
+                        setMostrarModalDetalle={setMostrarModalDetalle}
+                        detalleAlquiler={detalleAlquiler}
+                    />
 
                     <ModalEnvioCorreoAlquileres
                         mostrarModalCorreo={mostrarModalCorreo}
@@ -673,20 +730,20 @@ const verDetalleAlquiler = async (id_alquiler) => {
                         totalAlquileres={alquileres.length}
                     />
 
-                <NotificacionOperacion
-                    mostrar={toast.mostrar}
-                    mensaje={toast.mensaje}
-                    tipo={toast.tipo}
-                    onCerrar={() =>
-                        setToast({
-                            ...toast,
-                            mostrar: false,
-                        })
-                    }
-                />
+                    <NotificacionOperacion
+                        mostrar={toast.mostrar}
+                        mensaje={toast.mensaje}
+                        tipo={toast.tipo}
+                        onCerrar={() =>
+                            setToast({
+                                ...toast,
+                                mostrar: false,
+                            })
+                        }
+                    />
 
-            </Container>
-        </div>
+                </Container>
+            </div>
         </div>
     );
 };

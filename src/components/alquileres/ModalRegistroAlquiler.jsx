@@ -28,28 +28,8 @@ const ModalRegistroAlquiler = ({
     // CAMBIO VEHÍCULO
     // =========================
     const manejarCambioCoche = (e) => {
-
-        const idCocheSeleccionado = e.target.value;
-
-        // buscar coche seleccionado
-        const cocheSeleccionado = coches.find(
-            (c) => String(c.id_coche) === String(idCocheSeleccionado)
-        );
-
-        // actualizar id_coche
-        manejoCambioInput(e);
-
-        // poner automáticamente el valor por día
-        if (cocheSeleccionado) {
-
-            manejoCambioInput({
-                target: {
-                    name: "precio_total",
-                    value: cocheSeleccionado.valor_dia,
-                },
-            });
-        }
-    };
+    manejoCambioInput(e);
+};
 
     return (
 
@@ -183,26 +163,54 @@ const ModalRegistroAlquiler = ({
 
                     </Form.Group>
 
-                    {/* PRECIO */}
-                    <Form.Group className="mb-3">
+                    <Row>
 
-                        <Form.Label>
-                            Precio Total
-                        </Form.Label>
+    <Col md={4}>
+        <Form.Group className="mb-3">
 
-                        <Form.Control
-                            type="number"
-                            name="precio_total"
-                            value={nuevoAlquiler.precio_total || ""}
-                            onChange={manejoCambioInput}
-                            readOnly
-                        />
+            <Form.Label>
+                Valor por Día
+            </Form.Label>
 
-                        <small className="text-muted">
-                            El precio se calcula automáticamente según el vehículo.
-                        </small>
+            <Form.Control
+                value={`C$${nuevoAlquiler.valor_dia || 0}`}
+                readOnly
+            />
 
-                    </Form.Group>
+        </Form.Group>
+    </Col>
+
+    <Col md={4}>
+        <Form.Group className="mb-3">
+
+            <Form.Label>
+                Cantidad de Días
+            </Form.Label>
+
+            <Form.Control
+                value={nuevoAlquiler.cantidad_dias || 0}
+                readOnly
+            />
+
+        </Form.Group>
+    </Col>
+
+    <Col md={4}>
+        <Form.Group className="mb-3">
+
+            <Form.Label>
+                Precio Total
+            </Form.Label>
+
+            <Form.Control
+                value={`C$${nuevoAlquiler.precio_total || 0}`}
+                readOnly
+            />
+
+        </Form.Group>
+    </Col>
+
+</Row>
 
                     {/* ESTADO */}
                     <Form.Group className="mb-3">

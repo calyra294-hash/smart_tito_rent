@@ -52,7 +52,11 @@ const ModalDetalleAlquiler = ({
 
                                 <th>Vehículo</th>
 
-                                <th>Precio</th>
+                                <th>Valor Día</th>
+
+                                <th>Días</th>
+
+                                <th>Total</th>
 
                             </tr>
 
@@ -80,6 +84,14 @@ const ModalDetalleAlquiler = ({
                                         {detalle.coche
                                             ? `${detalle.coche.marca} ${detalle.coche.modelo}`
                                             : "Sin vehículo"}
+                                    </td>
+
+                                    <td>
+                                        C$ {detalle.valor_dia}
+                                    </td>
+
+                                    <td>
+                                        {detalle.cantidad_dias}
                                     </td>
 
                                     <td className="fw-bold text-success">
