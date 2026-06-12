@@ -171,12 +171,23 @@ const Encabezado = () => {
                         Empleados
                     </Nav.Link>
 
+
+
                     <Nav.Link
                         onClick={() => manejarNavegacion("/mantenimientos")}
                         className="sidebar-link"
                     >
                         <i className="bi bi-tools me-2"></i>
                         Mantenimientos
+                    </Nav.Link>
+
+                    <Nav.Link
+                        onClick={() =>
+                            manejarNavegacion("/dashboard-estadistico")
+                        }
+                    >
+                        <i className="bi bi-graph-up-arrow me-2"></i>
+                        Dashboard Estadístico
                     </Nav.Link>
 
                     <Nav.Link
