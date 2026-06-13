@@ -7,6 +7,7 @@ import {
   Spinner,
   Form,
   Button,
+  Carousel,
 } from "react-bootstrap";
 import {
   LineChart,
@@ -335,194 +336,223 @@ const Inicio = () => {
   };
 
   return (
-    <div className="contenido-principal">
-      <div
-        className="inicio-fondo"
-        style={{
-          backgroundImage: `url(${fondo})`,
-        }}
+    <div className="contenido-principal inicio-contenedor">
+      <Carousel
+        className="inicio-carousel"
+        controls
+        indicators
+        interval={null}
+        touch
+        style={{ minHeight: "80vh" }}
       >
-        <div className="texto-inicio">
-          <h3>Bienvenido al</h3>
+        <Carousel.Item>
+          <div
+            className="inicio-fondo"
+            style={{
+              backgroundImage: `url(${fondo})`,
+            }}
+          >
+            <div className="inicio-fondo-overlay"></div>
 
-          <h1>Sistema de Gestión</h1>
+            <div className="texto-inicio">
+              <h3>Bienvenido al</h3>
 
-          <h2>Tito's Rent a Car</h2>
+              <h1>Sistema de Gestión</h1>
 
-          <p>
-            Gestiona alquileres, clientes, vehículos y mantenimientos desde una sola plataforma.
-          </p>
-        </div>
-      </div>
+              <h2>Tito's Rent a Car</h2>
 
-      <div className="contenedor-dashboard mt-4 mx-3 mx-md-4 mb-4 inicio-estadisticas">
-        <div className="mb-4">
-          <h2 className="fw-bold mb-1">Dashboard del Negocio</h2>
-          <p className="text-muted mb-0">
-            
-          </p>
-        </div>
+              <p>
+                Gestiona alquileres, clientes, vehículos y mantenimientos desde una sola plataforma.
+              </p>
+            </div>
+          </div>
+        </Carousel.Item>
 
-        <Row className="g-3 align-items-end mb-4">
-          <Col xs={6} md={3}>
-            <Form.Group>
-              <Form.Label>Desde</Form.Label>
-              <Form.Control
-                type="date"
-                value={fechaDesde}
-                onChange={(e) => setFechaDesde(e.target.value)}
-              />
-            </Form.Group>
-          </Col>
+        <Carousel.Item>
+          <div className="inicio-slide-dashboard">
+            <div className="contenedor-dashboard dashboard-slide-panel">
+              <div className="dashboard-slide-layout">
+                <div className="mb-3">
+                  <h2 className="fw-bold mb-1">Dashboard del Negocio</h2>
+                  <p className="text-muted mb-0">
+                    Fechas, exportación y métricas principales en una sola vista.
+                  </p>
+                </div>
 
-          <Col xs={6} md={3}>
-            <Form.Group>
-              <Form.Label>Hasta</Form.Label>
-              <Form.Control
-                type="date"
-                value={fechaHasta}
-                onChange={(e) => setFechaHasta(e.target.value)}
-              />
-            </Form.Group>
-          </Col>
+                <Row className="g-3 align-items-end mb-3 dashboard-filtros-row">
+                  <Col xs={6} md={3}>
+                    <Form.Group>
+                      <Form.Label>Desde</Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={fechaDesde}
+                        onChange={(e) => setFechaDesde(e.target.value)}
+                      />
+                    </Form.Group>
+                  </Col>
 
-          <Col md={3} className="d-flex align-items-end">
-            <Button variant="success" className="w-100" onClick={descargarExcel}>
-              <i className="bi bi-file-earmark-excel me-2"></i>
-              Descargar Excel
-            </Button>
-          </Col>
-        </Row>
+                  <Col xs={6} md={3}>
+                    <Form.Group>
+                      <Form.Label>Hasta</Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={fechaHasta}
+                        onChange={(e) => setFechaHasta(e.target.value)}
+                      />
+                    </Form.Group>
+                  </Col>
 
-        {cargando ? (
-          <Container className="text-center py-5">
-            <Spinner animation="border" variant="primary" size="lg" />
-            <p className="mt-3 mb-0">Cargando estadísticas...</p>
-          </Container>
-        ) : (
-          <>
-            <Row className="g-4 mb-4">
-              <Col md={6} lg={3}>
-                <Card
-                  className="h-100 text-white shadow border-0"
-                  style={{ background: "linear-gradient(135deg, #28a745, #34ce57)" }}
-                >
-                  <Card.Body>
-                    <h5>Alquileres</h5>
-                    <h2>{estadisticas.totalAlquileres}</h2>
-                  </Card.Body>
-                </Card>
-              </Col>
+                  <Col md={3} className="d-flex align-items-end">
+                    <Button variant="success" className="w-100" onClick={descargarExcel}>
+                      <i className="bi bi-file-earmark-excel me-2"></i>
+                      Descargar Excel
+                    </Button>
+                  </Col>
+                </Row>
 
-              <Col md={6} lg={3}>
-                <Card
-                  className="h-100 text-white shadow border-0"
-                  style={{ background: "linear-gradient(135deg, #0166d3, #3399ff)" }}
-                >
-                  <Card.Body>
-                    <h5>Vehículos</h5>
-                    <h2>{estadisticas.totalVehiculos}</h2>
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={6} lg={3}>
-                <Card
-                  className="h-100 text-white shadow border-0"
-                  style={{ background: "linear-gradient(135deg, #5ea5f1, #94c0ec)" }}
-                >
-                  <Card.Body>
-                    <h5>Usuarios</h5>
-                    <h2>{estadisticas.totalUsuarios}</h2>
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={6} lg={3}>
-                <Card
-                  className="h-100 text-white shadow border-0"
-                  style={{ background: "linear-gradient(135deg, #e27d01, #ffa500)" }}
-                >
-                  <Card.Body>
-                    <h5>Mantenimientos</h5>
-                    <h2>{estadisticas.totalMantenimientos}</h2>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-
-            <Row className="g-4">
-              <Col lg={8}>
-                <Card className="shadow border-0 h-100">
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-                      <div>
-                        <h5 className="mb-1">Ingresos por día</h5>
-                        <p className="text-muted mb-0">
-                          Total en el rango: C$ {formatearMoneda(estadisticas.ingresosTotales)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <ResponsiveContainer width="100%" height={360}>
-                      <LineChart data={estadisticas.ingresosPorDia}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="fecha" />
-                        <YAxis tickFormatter={(valor) => `C$ ${valor}`} />
-                        <Tooltip
-                          formatter={(valor) => [`C$ ${formatearMoneda(valor)}`, "Ingresos"]}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="total"
-                          stroke="#5e26b2"
-                          strokeWidth={4}
-                          dot={{ r: 5 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col lg={4}>
-                <Card className="shadow border-0 h-100">
-                  <Card.Body>
-                    <h5 className="mb-3">Vehículos más alquilados</h5>
-                    <ResponsiveContainer width="100%" height={360}>
-                      <PieChart>
-                        <Pie
-                          data={
-                            estadisticas.vehiculosMasAlquilados.length > 0
-                              ? estadisticas.vehiculosMasAlquilados
-                              : [{ name: "Sin datos", value: 1 }]
-                          }
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={110}
-                          label
+                {cargando ? (
+                  <Container className="dashboard-slide-loading text-center py-4 d-flex flex-column justify-content-center align-items-center">
+                    <Spinner animation="border" variant="primary" size="lg" />
+                    <p className="mt-3 mb-0">Cargando estadísticas...</p>
+                  </Container>
+                ) : (
+                  <div className="dashboard-slide-content">
+                    <Row className="g-3 mb-3 dashboard-kpis-row">
+                      <Col md={6} lg={3}>
+                        <Card
+                          className="h-100 text-white shadow border-0 dashboard-kpi-card"
+                          style={{ background: "linear-gradient(135deg, #28a745, #34ce57)" }}
                         >
-                          {(
-                            estadisticas.vehiculosMasAlquilados.length > 0
-                              ? estadisticas.vehiculosMasAlquilados
-                              : [{ name: "Sin datos", value: 1 }]
-                          ).map((_, indice) => (
-                            <Cell key={`cell-${indice}`} fill={COLORES[indice % COLORES.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(valor) => [valor, "Alquileres"]} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </>
-        )}
-      </div>
+                          <Card.Body>
+                            <h5>Alquileres</h5>
+                            <h2>{estadisticas.totalAlquileres}</h2>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                      <Col md={6} lg={3}>
+                        <Card
+                          className="h-100 text-white shadow border-0 dashboard-kpi-card"
+                          style={{ background: "linear-gradient(135deg, #0166d3, #3399ff)" }}
+                        >
+                          <Card.Body>
+                            <h5>Vehículos</h5>
+                            <h2>{estadisticas.totalVehiculos}</h2>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                      <Col md={6} lg={3}>
+                        <Card
+                          className="h-100 text-white shadow border-0 dashboard-kpi-card"
+                          style={{ background: "linear-gradient(135deg, #5ea5f1, #94c0ec)" }}
+                        >
+                          <Card.Body>
+                            <h5>Usuarios</h5>
+                            <h2>{estadisticas.totalUsuarios}</h2>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                      <Col md={6} lg={3}>
+                        <Card
+                          className="h-100 text-white shadow border-0 dashboard-kpi-card"
+                          style={{ background: "linear-gradient(135deg, #e27d01, #ffa500)" }}
+                        >
+                          <Card.Body>
+                            <h5>Mantenimientos</h5>
+                            <h2>{estadisticas.totalMantenimientos}</h2>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    </Row>
+
+                    <Row className="g-3 flex-grow-1 align-items-stretch dashboard-graficos-row">
+                      <Col lg={8} className="d-flex">
+                        <Card
+                          className="shadow border-0 w-100 dashboard-chart-card"
+                          style={{ minHeight: 420 }}
+                        >
+                          <Card.Body className="d-flex flex-column" style={{ height: "100%" }}>
+                            <div className="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                              <div>
+                                <h5 className="mb-1">Ingresos por día</h5>
+                                <p className="text-muted mb-0">
+                                  Total en el rango: C$ {formatearMoneda(estadisticas.ingresosTotales)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div style={{ height: 350, width: "100%" }}>
+                              <ResponsiveContainer width="100%" height={320}>
+                                <LineChart data={estadisticas.ingresosPorDia}>
+                                  <CartesianGrid strokeDasharray="3 3" />
+                                  <XAxis dataKey="fecha" />
+                                  <YAxis tickFormatter={(valor) => `C$ ${valor}`} />
+                                  <Tooltip
+                                    formatter={(valor) => [`C$ ${formatearMoneda(valor)}`, "Ingresos"]}
+                                  />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="total"
+                                    stroke="#5e26b2"
+                                    strokeWidth={4}
+                                    dot={{ r: 5 }}
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                      <Col lg={4} className="d-flex">
+                        <Card
+                          className="shadow border-0 w-100 dashboard-chart-card"
+                          style={{ minHeight: 420 }}
+                        >
+                          <Card.Body className="d-flex flex-column" style={{ height: "100%" }}>
+                            <h5 className="mb-3">Vehículos más alquilados</h5>
+                            <div style={{ height: 350, width: "100%" }}>
+                              <ResponsiveContainer width="100%" height={320}>
+                                <PieChart>
+                                  <Pie
+                                    data={
+                                      estadisticas.vehiculosMasAlquilados.length > 0
+                                        ? estadisticas.vehiculosMasAlquilados
+                                        : [{ name: "Sin datos", value: 1 }]
+                                    }
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={110}
+                                    label
+                                  >
+                                    {(
+                                      estadisticas.vehiculosMasAlquilados.length > 0
+                                        ? estadisticas.vehiculosMasAlquilados
+                                        : [{ name: "Sin datos", value: 1 }]
+                                    ).map((_, indice) => (
+                                      <Cell key={`cell-${indice}`} fill={COLORES[indice % COLORES.length]} />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip formatter={(valor) => [valor, "Alquileres"]} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    </Row>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Carousel.Item>
+      </Carousel>
     </div>
   );
 };

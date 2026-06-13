@@ -9,6 +9,7 @@
     --table-hover: #f9fafb;
     --bg-sidebar: linear-gradient(to bottom, #111827, #0b1220);
     --bg-topbar: linear-gradient(to right, #b91c1c, #ef4444);
+    --topbar-height: 70px;
 }
 
 body.dark-theme {
@@ -79,7 +80,7 @@ body {
 
 .contenido-principal {
     margin-left: 210px;
-    margin-top: 70px;
+    margin-top: var(--topbar-height);
     padding: 0;
 }
 
@@ -185,27 +186,143 @@ tbody tr:hover {
 }
 
 .logo-titos {
-    height: 75px;
+    height: var(--topbar-height);
     object-fit: contain;
 }
 
 .inicio-fondo {
     width: 100%;
-    height: calc(100vh - 70px);
+    height: calc(100vh - var(--topbar-height));
 
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
 
     position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.inicio-contenedor {
+    height: calc(100vh - var(--topbar-height));
+}
+
+.inicio-carousel,
+.inicio-carousel .carousel-inner,
+.inicio-carousel .carousel-item {
+    height: 100%;
+}
+
+.inicio-carousel .carousel-item {
+    overflow: hidden;
+}
+
+.inicio-carousel .carousel-indicators {
+    margin-bottom: 12px;
+}
+
+.inicio-carousel .carousel-indicators [data-bs-target] {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+}
+
+.inicio-carousel .carousel-control-prev,
+.inicio-carousel .carousel-control-next {
+    width: 4rem;
+}
+
+.inicio-fondo-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(12, 12, 12, 0.82), rgba(12, 12, 12, 0.28));
+}
+
+.inicio-slide-dashboard {
+    height: 100%;
+    padding: 1rem 1rem 1.1rem;
+}
+
+.dashboard-slide-panel {
+    height: 100%;
+    padding: 1.1rem 1.25rem;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(14px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dashboard-slide-layout {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.dashboard-slide-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-slide-loading {
+    flex: 1;
+    min-height: 0;
+}
+
+.dashboard-kpi-card .card-body {
+    padding: 1rem 1.1rem;
+}
+
+.dashboard-kpi-card h5 {
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem;
+}
+
+.dashboard-kpi-card h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0;
+}
+
+.dashboard-chart-card .card-body {
+    min-height: 0;
+}
+
+.dashboard-chart-surface {
+    min-height: 0;
+    width: 100%;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.dashboard-chart-line {
+    min-height: 240px;
+}
+
+.dashboard-chart-donut {
+    min-height: 240px;
+}
+
+.dashboard-graficos-row > [class*="col-"] {
+    min-height: 0;
+}
+
+.dashboard-graficos-row .card {
+    min-height: 0;
 }
 
 .texto-inicio {
     position: absolute;
-    top: 15%;
-    left: 8%;
+    top: 50%;
+    left: 7%;
     max-width: 550px;
     color: white;
+    transform: translateY(-50%);
+    z-index: 1;
 }
 
 .texto-inicio h3 {
@@ -569,6 +686,15 @@ tbody tr:hover {
     background-color: var(--bg-card);
     color: var(--text-primary);
 }
+
+.dark-theme .dashboard-slide-panel {
+    background: rgba(20, 20, 20, 0.75);
+    color: var(--text-primary);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.dark-theme .dashboard-chart-surface {
+    background: rgba(255, 255, 255, 0.06);
 
 .dark-theme .contenido-principal {
     background-color: var(--bg-body);
