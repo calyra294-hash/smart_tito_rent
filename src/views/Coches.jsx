@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
-
 import ModalRegistroCoche from "../components/coches/ModalRegistroCoche";
 import ModalEdicionCoche from "../components/coches/ModalEdicionCoche";
 import ModalEliminacionCoche from "../components/coches/ModalEliminacionCoche";
 import TablaCoche from "../components/coches/TablaCoche";
-
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Coches = () => {
 
@@ -41,6 +41,60 @@ const Coches = () => {
 
     const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
     const [cocheEditar, setCocheEditar] = useState(null);
+
+
+
+    // =========================
+// PDF COCHES
+// =========================
+const generarPDF = () => {
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Reporte de Vehículos", 14, 15);
+
+    doc.setFontSize(10);
+    doc.text(
+        `Fecha: ${new Date().toLocaleDateString()}`,
+        14,
+        22
+    );
+
+    doc.text(
+        `Total de vehículos: ${cochesFiltrados.length}`,
+        14,
+        28
+    );
+
+    autoTable(doc, {
+        startY: 35,
+        head: [[
+            "ID",
+            "Marca",
+            "Modelo",
+            "Placa",
+            "Estado",
+            "Valor Día"
+        ]],
+
+        body: cochesFiltrados.map(c => [
+            c.id_coche,
+            c.marca,
+            c.modelo,
+            c.placa,
+            c.estado,
+            c.valor_dia
+        ]),
+
+        headStyles: {
+            fillColor: [185, 28, 28], // rojo Tito's Rent
+            textColor: [255, 255, 255]
+        }
+    });
+
+    doc.save("reporte_coches.pdf");
+};
 
     // =========================
     // CARGAR
@@ -298,6 +352,15 @@ const Coches = () => {
                         </Col>
 
                         <Col className="text-end">
+
+                            <Button
+                                variant="danger"
+                                className="rounded-pill px-4 shadow-sm me-2"
+                                onClick={generarPDF}
+                            >
+                                <i className="bi bi-file-earmark-pdf-fill me-2"></i>
+                                PDF
+                            </Button>
 
                             <Button
                                 variant="danger"

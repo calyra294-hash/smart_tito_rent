@@ -10,8 +10,11 @@ import TarjetaEmpleado from "../components/empleados/TarjetaEmpleado";
 import TablaEmpleado from "../components/empleados/TablaEmpleado";
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Empleados = () => {
+
     const [toast, setToast] = useState({
         mostrar: false,
         mensaje: "",
@@ -61,7 +64,64 @@ const Empleados = () => {
     const [emailDestino, setEmailDestino] = useState("");
     const [enviandoCorreo, setEnviandoCorreo] = useState(false);
 
-    // 🔥 CARGAR EMPLEADOS (sin contraseña)
+
+// =========================
+// PDF EMPLEADOS
+// =========================
+const generarPDF = () => {
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Reporte de Empleados", 14, 15);
+
+    doc.setFontSize(10);
+    doc.text(
+        `Fecha: ${new Date().toLocaleDateString()}`,
+        14,
+        22
+    );
+
+    doc.text(
+        `Total de empleados: ${empleadosFiltrados.length}`,
+        14,
+        28
+    );
+
+    autoTable(doc, {
+        startY: 35,
+        head: [[
+            "ID",
+            "Nombre",
+            "Apellido",
+            "Rol",
+            "Email",
+            "Cédula",
+            "Fecha Contratación"
+        ]],
+
+        body: empleadosFiltrados.map(e => [
+            e.id_empleado,
+            `${e.primer_nombre} ${e.segundo_nombre || ""}`,
+            `${e.primer_apellido} ${e.segundo_apellido || ""}`,
+            e.rol,
+            e.email,
+            e.cedula,
+            e.fecha_contratacion
+        ]),
+
+        headStyles: {
+            fillColor: [185, 28, 28], // rojo Tito's Rent
+            textColor: [255, 255, 255]
+        }
+    });
+
+    doc.save("reporte_empleados.pdf");
+};
+
+
+
+    //  CARGAR EMPLEADOS (sin contraseña)
     const cargarEmpleados = async () => {
         try {
             setCargando(true);
@@ -358,6 +418,16 @@ const Empleados = () => {
                         </Col>
 
                         <Col className="text-end">
+
+                            <Button
+                                variant="danger"
+                                className="rounded-pill px-4 shadow-sm me-2"
+                                onClick={generarPDF}
+                            >
+                                <i className="bi bi-file-earmark-pdf-fill me-2"></i>
+                                PDF
+                            </Button>
+                            
                             <Button
                                 variant="danger"
                                 className="rounded-pill px-4 shadow-sm me-2"

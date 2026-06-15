@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
-
 import ModalRegistroMantenimiento from "../components/mantenimientos/ModalRegistroMantenimiento";
 import ModalEdicionMantenimiento from "../components/mantenimientos/ModalEdicionMantenimiento";
 import ModalEliminacionMantenimiento from "../components/mantenimientos/ModalEliminacionMantenimiento";
@@ -10,6 +9,8 @@ import TablaMantenimientos from "../components/mantenimientos/TablaMantenimiento
 import TarjetaMantenimiento from "../components/mantenimientos/TarjetaMantenimiento";
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Mantenimientos = () => {
     const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "" });
@@ -45,6 +46,58 @@ const Mantenimientos = () => {
         fecha_fin: "",
         costo: "",
     });
+
+    // =========================
+// PDF MANTENIMIENTOS
+// =========================
+const generarPDF = () => {
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Reporte de Mantenimientos", 14, 15);
+
+    doc.setFontSize(10);
+    doc.text(
+        `Fecha: ${new Date().toLocaleDateString()}`,
+        14,
+        22
+    );
+
+    doc.text(
+        `Total de mantenimientos: ${mantenimientosFiltrados.length}`,
+        14,
+        28
+    );
+
+    autoTable(doc, {
+        startY: 35,
+        head: [[
+            "ID",
+            "Descripción",
+            "Justificación",
+            "Fecha Inicio",
+            "Fecha Fin",
+            "Costo"
+        ]],
+
+        body: mantenimientosFiltrados.map(m => [
+            m.id_mantenimiento,
+            m.descripcion,
+            m.justificacion,
+            m.fecha_inicio,
+            m.fecha_fin,
+            m.costo
+        ]),
+
+        headStyles: {
+            fillColor: [185, 28, 28], // rojo Tito's Rent
+            textColor: [255, 255, 255]
+        }
+    });
+
+    doc.save("reporte_mantenimientos.pdf");
+};
 
     // Carga inicial de listas para los selectores
 const cargarListas = async () => {
@@ -302,6 +355,15 @@ const cargarListas = async () => {
                         </Col>
 
                         <Col className="text-end">
+
+                            <Button
+                                variant="danger"
+                                className="rounded-pill px-4 shadow-sm me-2"
+                                onClick={generarPDF}
+                            >
+                                <i className="bi bi-file-earmark-pdf-fill me-2"></i>
+                                PDF
+                            </Button>
 
                             <Button
                                 variant="danger"

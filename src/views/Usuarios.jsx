@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
-
 import ModalRegistroUsuario from "../components/usuarios/ModalRegistroUsuario";
 import ModalEdicionUsuario from "../components/usuarios/ModalEdicionUsuario";
 import ModalEliminacionUsuario from "../components/usuarios/ModalEliminacionUsuario";
 import TarjetaUsuarios from "../components/usuarios/TarjetaUsuario";
 import TablaUsuarios from "../components/usuarios/TablaUsuarios";
-
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Usuarios = () => {
 
@@ -46,6 +46,60 @@ const Usuarios = () => {
     const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
     const [usuarioEditar, setUsuarioEditar] = useState(null);
 
+
+    // =========================
+// PDF USUARIOS
+// =========================
+const generarPDF = () => {
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Reporte de Usuarios", 14, 15);
+
+    doc.setFontSize(10);
+    doc.text(
+        `Fecha: ${new Date().toLocaleDateString()}`,
+        14,
+        22
+    );
+
+    doc.text(
+        `Total de usuarios: ${usuariosFiltrados.length}`,
+        14,
+        28
+    );
+
+    autoTable(doc, {
+        startY: 35,
+        head: [[
+            "ID",
+            "Nombre",
+            "Apellido",
+            "Cédula",
+            "Email",
+            "Teléfono",
+            "Licencia"
+        ]],
+
+        body: usuariosFiltrados.map(u => [
+            u.id_usuario,
+            u.nombre1,
+            u.apellido1,
+            u.cedula,
+            u.email,
+            u.telefono,
+            u.licencia
+        ]),
+
+        headStyles: {
+            fillColor: [185, 28, 28], // rojo Tito's Rent
+            textColor: [255, 255, 255]
+        }
+    });
+
+    doc.save("reporte_usuarios.pdf");
+};
     // =========================
     // CARGAR USUARIOS
     // =========================
@@ -263,6 +317,15 @@ const Usuarios = () => {
                             </Col>
 
                             <Col className="text-end">
+                                <Button
+                                    variant="danger"
+                                    className="rounded-pill px-4 shadow-sm me-2"
+                                    onClick={generarPDF}
+                                >
+                                    <i className="bi bi-file-earmark-pdf-fill me-2"></i>
+                                    PDF
+                                </Button>
+                                
                                 <Button
                                     variant="danger"
                                     className="rounded-pill px-4 shadow-sm"

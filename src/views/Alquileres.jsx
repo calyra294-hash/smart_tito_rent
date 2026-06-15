@@ -13,6 +13,8 @@ import TablaAlquileres from "../components/alquileres/TablaAlquileres";
 
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import NotificacionOperacion from "../components/NotificacionOperacion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Alquileres = () => {
 
@@ -64,6 +66,52 @@ const Alquileres = () => {
 
     const [detalleAlquiler, setDetalleAlquiler] = useState([]);
 
+
+    // === PDF ============////
+
+    const generarPDF = () => {
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Reporte de Alquileres", 14, 15);
+
+    doc.setFontSize(10);
+    doc.text(
+        `Fecha: ${new Date().toLocaleDateString()}`,
+        14,
+        22
+    );
+
+    doc.text(
+        `Total de alquileres: ${alquileresFiltrados.length}`,
+        14,
+        28
+    );
+
+    autoTable(doc, {
+        startY: 35,
+        head: [[
+            "ID",
+            "Fecha Inicio",
+            "Fecha Fin",
+            "Estado"
+        ]],
+        body: alquileresFiltrados.map(a => [
+            a.id_alquiler,
+            a.fecha_inicio,
+            a.fecha_fin,
+            a.estado
+        ]),
+
+        headStyles: {
+        fillColor: [185, 28, 28], // Rojo Tito's Rent
+        textColor: [255, 255, 255]
+    }
+    });
+
+    doc.save("reporte_alquileres.pdf");
+};
     // =========================
     // CARGAR ALQUILERES
     // =========================
@@ -605,6 +653,16 @@ const Alquileres = () => {
                             </Col>
 
                             <Col className="text-end">
+
+                                <Button
+                                    variant="danger"
+                                    className="rounded-pill px-4 shadow-sm me-2"
+                                    onClick={generarPDF}
+                                >
+                                    <i className="bi bi-file-earmark-pdf-fill me-2"></i>
+                                    PDF
+                                </Button>
+
 
                                 <Button
                                     variant="danger"
