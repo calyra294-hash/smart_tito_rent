@@ -192,7 +192,8 @@ tbody tr:hover {
 
 .inicio-fondo {
     width: 100%;
-    height: calc(100vh - var(--topbar-height));
+        min-height: calc(100vh - var(--topbar-height));
+
 
     background-size: cover;
     background-position: center center;
@@ -205,7 +206,7 @@ tbody tr:hover {
 }
 
 .inicio-contenedor {
-    height: calc(100vh - var(--topbar-height));
+    min-height: calc(100vh - var(--topbar-height));
 }
 
 .inicio-carousel,
@@ -215,7 +216,7 @@ tbody tr:hover {
 }
 
 .inicio-carousel .carousel-item {
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .inicio-carousel .carousel-indicators {
@@ -252,7 +253,7 @@ tbody tr:hover {
     backdrop-filter: blur(14px);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .dashboard-slide-layout {
@@ -360,9 +361,10 @@ tbody tr:hover {
 }
 
 .texto-inicio {
-    top: 8%;
-    left: 2%;
-    max-width: 400px;
+    top: 50%;
+    left: 5%;
+    transform: translateY(-50%);
+    max-width: 500px;
 }
 
 .btn-login {
@@ -695,10 +697,12 @@ tbody tr:hover {
 
 .dark-theme .dashboard-chart-surface {
     background: rgba(255, 255, 255, 0.06);
+}
 
 .dark-theme .contenido-principal {
     background-color: var(--bg-body);
 }
+
 
 .dark-theme .text-dark {
     color: #e8eaed !important;

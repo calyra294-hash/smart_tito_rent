@@ -355,6 +355,7 @@ const Inicio = () => {
             <div className="inicio-fondo-overlay"></div>
 
             <div className="texto-inicio">
+              
               <h3>Bienvenido al</h3>
 
               <h1>Sistema de Gestión</h1>

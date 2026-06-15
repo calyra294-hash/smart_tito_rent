@@ -8,8 +8,6 @@ const Encabezado = () => {
 
     const navigate = useNavigate();
 
-
-
     const [usuarioLogueado, setUsuarioLogueado] = useState(false);
     const [temaOscuro, setTemaOscuro] = useState(() => {
         return localStorage.getItem("tema") === "dark";
@@ -179,15 +177,6 @@ const Encabezado = () => {
                     >
                         <i className="bi bi-tools me-2"></i>
                         Mantenimientos
-                    </Nav.Link>
-
-                    <Nav.Link
-                        onClick={() =>
-                            manejarNavegacion("/dashboard-estadistico")
-                        }
-                    >
-                        <i className="bi bi-graph-up-arrow me-2"></i>
-                        Dashboard Estadístico
                     </Nav.Link>
 
                     <Nav.Link

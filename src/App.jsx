@@ -13,7 +13,7 @@ import Empleados from "./views/Empleados.jsx";
 import Mantenimientos from "./views/Mantenimientos.jsx"; 
 import Usuarios from "./views/Usuarios.jsx"; 
 import Dashboard from "./views/Dashboard.jsx"; 
-import DashboardEstadistico from "./views/DashboardEstadistico";
+
 import Login from "./views/Login";
 import RutaProtegida from "./components/rutas/RutaProtegida";
 import Pagina404 from "./views/Pagina404";
@@ -44,8 +44,6 @@ const App = () => {
           <Route path="/mantenimientos" element={<RutaProtegida><Mantenimientos /></RutaProtegida>} />
           <Route path="/usuarios" element={<RutaProtegida><Usuarios /></RutaProtegida>} />
           <Route path="/dashboard" element={<RutaProtegida><Dashboard /></RutaProtegida>} />
-          <Route path="/dashboard-estadistico" element={<RutaProtegida><DashboardEstadistico /></RutaProtegida>} />
-
           <Route path="*" element={<Pagina404 />} />
 
         </Routes>
