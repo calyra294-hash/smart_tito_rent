@@ -131,7 +131,7 @@ const Catalogo = () => {
 
     return (
 
-        <div className="contenido-principal">
+        <div className="inicio-contenedor">
             <Container fluid>
 
             {/* TÍTULO */}

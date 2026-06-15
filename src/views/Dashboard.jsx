@@ -2,7 +2,8 @@ import { Container, Card } from "react-bootstrap";
 
 const Dashboard = () => {
   return (
-    <div className="contenido-principal">
+    
+    <div className="inicio-contenedor">
 
             <div className="contenedor-dashboard"></div>
     <Container>

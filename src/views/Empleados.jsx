@@ -339,7 +339,7 @@ const Empleados = () => {
     };
 
     return (
-        <div className="contenido-principal">
+        <div className="inicio-contenedor">
             <div className="contenedor-dashboard">
 
                 <Container fluid>

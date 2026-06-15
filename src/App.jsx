@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Encabezado from "./components/navegation/Encabezado.jsx";
@@ -24,12 +24,22 @@ import "./App.css";
 import './App.css'
 
 const App = () => {
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   return (
     <Router>
 
-      <Encabezado />
+    <Encabezado
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+      />
 
-      <main className="margen-superior-main">
+      <main
+        className={`margen-superior-main ${
+          sidebarCollapsed ? "sidebar-cerrado" : ""
+        }`}
+      >
         <Routes>
 
           <Route path="/login" element={<Login />} />

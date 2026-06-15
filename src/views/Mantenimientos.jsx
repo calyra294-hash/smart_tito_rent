@@ -288,7 +288,7 @@ const cargarListas = async () => {
     };
 
     return (
-        <div className="contenido-principal">
+        <div className="inicio-contenedor">
             <div className="contenedor-dashboard">
                 <Container className="mt-3">
                     <Row className="align-items-center mb-3">

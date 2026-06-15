@@ -9,6 +9,7 @@ import {
   Button,
   Carousel,
 } from "react-bootstrap";
+
 import {
   LineChart,
   Line,
@@ -336,7 +337,7 @@ const Inicio = () => {
   };
 
   return (
-    <div className="contenido-principal inicio-contenedor">
+    <div className="inicio-contenedor">
       <Carousel
         className="inicio-carousel"
         controls

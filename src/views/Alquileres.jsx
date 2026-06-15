@@ -581,7 +581,7 @@ const Alquileres = () => {
 
     return (
 
-        <div className="contenido-principal">
+        <div className="inicio-contenedor">
             <div className="contenedor-dashboard">
 
                 <Container fluid>
@@ -653,8 +653,7 @@ const Alquileres = () => {
 
                     <div className="dashboard-card">
 
-                        {/* ... resto de tu código igual ... */}
-
+                        
                         <div className="dashboard-card">
                             {cargando ? (
                                 <div className="text-center p-5">
