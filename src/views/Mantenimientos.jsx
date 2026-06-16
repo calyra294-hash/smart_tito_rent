@@ -48,75 +48,53 @@ const Mantenimientos = () => {
     });
 
     // =========================
-// PDF MANTENIMIENTOS
-// =========================
-const generarPDF = () => {
+    // PDF MANTENIMIENTOS
+    // =========================
+    const generarPDF = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Reporte de Mantenimientos", 14, 15);
 
-    const doc = new jsPDF();
+        doc.setFontSize(10);
+        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 22);
+        doc.text(`Total de mantenimientos: ${mantenimientosFiltrados.length}`, 14, 28);
 
-    doc.setFontSize(18);
-    doc.text("Reporte de Mantenimientos", 14, 15);
+        autoTable(doc, {
+            startY: 35,
+            head: [["ID", "Descripción", "Justificación", "Fecha Inicio", "Fecha Fin", "Costo"]],
+            body: mantenimientosFiltrados.map(m => [
+                m.id_mantenimiento,
+                m.descripcion,
+                m.justificacion,
+                m.fecha_inicio,
+                m.fecha_fin,
+                m.costo
+            ]),
+            headStyles: {
+                fillColor: [185, 28, 28], // rojo Tito's Rent
+                textColor: [255, 255, 255]
+            }
+        });
 
-    doc.setFontSize(10);
-    doc.text(
-        `Fecha: ${new Date().toLocaleDateString()}`,
-        14,
-        22
-    );
-
-    doc.text(
-        `Total de mantenimientos: ${mantenimientosFiltrados.length}`,
-        14,
-        28
-    );
-
-    autoTable(doc, {
-        startY: 35,
-        head: [[
-            "ID",
-            "Descripción",
-            "Justificación",
-            "Fecha Inicio",
-            "Fecha Fin",
-            "Costo"
-        ]],
-
-        body: mantenimientosFiltrados.map(m => [
-            m.id_mantenimiento,
-            m.descripcion,
-            m.justificacion,
-            m.fecha_inicio,
-            m.fecha_fin,
-            m.costo
-        ]),
-
-        headStyles: {
-            fillColor: [185, 28, 28], // rojo Tito's Rent
-            textColor: [255, 255, 255]
-        }
-    });
-
-    doc.save("reporte_mantenimientos.pdf");
-};
+        doc.save("reporte_mantenimientos.pdf");
+    };
 
     // Carga inicial de listas para los selectores
-const cargarListas = async () => {
-    // FILTRO: Ahora solo traerá los coches cuyo estado sea exactamente "Disponible"
-    const { data: c, error: cocheError } = await supabase
-        .from("coche")
-        .select("*")
-        .eq("estado", "Disponible");
+    const cargarListas = async () => {
+        const { data: c, error: cocheError } = await supabase
+            .from("coche")
+            .select("*")
+            .eq("estado", "Disponible");
 
-    if (cocheError) {
-        console.error("Error al cargar coches disponibles:", cocheError);
-    }
+        if (cocheError) {
+            console.error("Error al cargar coches disponibles:", cocheError);
+        }
 
-    // Se mantiene igual para los empleados
-    const { data: e } = await supabase.from("empleados").select("*");
-    
-    setCoches(c || []);
-    setEmpleados(e || []);
-};
+        const { data: e } = await supabase.from("empleados").select("*");
+        
+        setCoches(c || []);
+        setEmpleados(e || []);
+    };
 
     const cargarMantenimientos = async () => {
         try {
@@ -147,7 +125,6 @@ const cargarListas = async () => {
 
     useEffect(() => {
         const texto = textoBusqueda.toLowerCase();
-
         setMantenimientosFiltrados(
             mantenimientos.filter((m) => {
                 const detalleTexto = JSON.stringify(m.detalle_mantenimiento || "").toLowerCase();
@@ -160,7 +137,7 @@ const cargarListas = async () => {
                     String(m.costo),
                     detalleTexto,
                 ]
-                    .some((campo) => campo?.toLowerCase().includes(texto));
+                .some((campo) => campo?.toLowerCase().includes(texto));
             })
         );
     }, [textoBusqueda, mantenimientos]);
@@ -176,102 +153,88 @@ const cargarListas = async () => {
     };
 
     const agregarMantenimiento = async () => {
-    try {
-        if (!nuevoMantenimiento.id_coche || !nuevoMantenimiento.id_empleado) {
-            setToast({ mostrar: true, mensaje: "Debes seleccionar un coche y un empleado", tipo: "error" });
-            return;
+        try {
+            if (!nuevoMantenimiento.id_coche || !nuevoMantenimiento.id_empleado) {
+                setToast({ mostrar: true, mensaje: "Debes seleccionar un coche and un empleado", tipo: "error" });
+                return;
+            }
+
+            const { data: mantData, error: mantError } = await supabase
+                .from("mantenimiento")
+                .insert([{
+                    descripcion: nuevoMantenimiento.descripcion,
+                    justificacion: nuevoMantenimiento.justificacion,
+                    fecha_inicio: nuevoMantenimiento.fecha_inicio,
+                    fecha_fin: nuevoMantenimiento.fecha_fin,
+                    costo: nuevoMantenimiento.costo,
+                }])
+                .select()
+                .single();
+
+            if (mantError) throw mantError;
+
+            const { error: detalleError } = await supabase
+                .from("detalle_mantenimiento")
+                .insert([{
+                    id_mantenimiento: mantData.id_mantenimiento,
+                    id_coche: nuevoMantenimiento.id_coche,
+                    id_empleado: nuevoMantenimiento.id_empleado,
+                    observaciones: "Mantenimiento inicializado",
+                    recomendaciones: "Pendiente",
+                    partes_cambiadas: "Ninguna"
+                }]);
+
+            if (detalleError) {
+                await supabase.from("mantenimiento").delete().eq("id_mantenimiento", mantData.id_mantenimiento);
+                throw detalleError;
+            }
+
+            const { error: cocheError } = await supabase
+                .from("coche")
+                .update({ estado: "En Mantenimiento" })
+                .eq("id_coche", nuevoMantenimiento.id_coche);
+
+            if (cocheError) throw cocheError;
+
+            setMostrarModal(false);
+            setToast({ mostrar: true, mensaje: "¡Mantenimiento registrado y vehículo actualizado con éxito!", tipo: "exito" });
+
+            await cargarMantenimientos(); 
+            await cargarListas(); 
+
+            setNuevoMantenimiento({
+                descripcion: "", justificacion: "", fecha_inicio: "",
+                fecha_fin: "", costo: "", id_coche: "", id_empleado: ""
+            });
+
+        } catch (error) {
+            console.error("Error completo en el flujo:", error);
+            setToast({ mostrar: true, mensaje: "Error: " + error.message, tipo: "error" });
         }
-
-        // 1. Insertar el encabezado del Mantenimiento
-        const { data: mantData, error: mantError } = await supabase
-            .from("mantenimiento")
-            .insert([{
-                descripcion: nuevoMantenimiento.descripcion,
-                justificacion: nuevoMantenimiento.justificacion,
-                fecha_inicio: nuevoMantenimiento.fecha_inicio,
-                fecha_fin: nuevoMantenimiento.fecha_fin,
-                costo: nuevoMantenimiento.costo,
-            }])
-            .select()
-            .single();
-
-        if (mantError) throw mantError;
-
-        // 2. Insertar el Detalle del Mantenimiento
-        const { error: detalleError } = await supabase
-            .from("detalle_mantenimiento")
-            .insert([{
-                id_mantenimiento: mantData.id_mantenimiento,
-                id_coche: nuevoMantenimiento.id_coche,
-                id_empleado: nuevoMantenimiento.id_empleado,
-                observaciones: "Mantenimiento inicializado",
-                recomendaciones: "Pendiente",
-                partes_cambiadas: "Ninguna"
-            }]);
-
-        // Si falla el detalle, borramos el mantenimiento para no dejar basura en la BD
-        if (detalleError) {
-            await supabase.from("mantenimiento").delete().eq("id_mantenimiento", mantData.id_mantenimiento);
-            throw detalleError;
-        }
-
-        // 3. Actualizar el estado del coche a 'En Mantenimiento'
-        const { error: cocheError } = await supabase
-            .from("coche")
-            .update({ estado: "En Mantenimiento" })
-            .eq("id_coche", nuevoMantenimiento.id_coche);
-
-        if (cocheError) throw cocheError;
-
-        // 4. Cerrar el modal primero para mejorar la experiencia visual (UX)
-        setMostrarModal(false);
-        setToast({ mostrar: true, mensaje: "¡Mantenimiento registrado y vehículo actualizado con éxito!", tipo: "exito" });
-
-        // 5. Recargar de forma asíncrona pero asegurada todas las consultas
-        await cargarMantenimientos(); 
-        await cargarListas(); // Esto actualiza los coches disponibles en tus selectores locales
-
-        // 6. Limpiar el formulario al final de todo el proceso
-        setNuevoMantenimiento({
-            descripcion: "", 
-            justificacion: "", 
-            fecha_inicio: "",
-            fecha_fin: "", 
-            costo: "", 
-            id_coche: "", 
-            id_empleado: ""
-        });
-
-    } catch (error) {
-        console.error("Error completo en el flujo:", error);
-        setToast({ mostrar: true, mensaje: "Error: " + error.message, tipo: "error" });
-    }
-};
+    };
 
     const actualizarMantenimiento = async () => {
     try {
-        // 1. Guardar los cambios del mantenimiento
+        // SOLUCIÓN: Extraer id y eliminar CUALQUIER propiedad de relación anidada (como detalle_mantenimiento)
+        const { id_mantenimiento, detalle_mantenimiento, ...datosAActualizar } = mantenimientoEditar;
+
         const { error } = await supabase
             .from("mantenimiento")
-            .update(mantenimientoEditar)
-            .eq("id_mantenimiento", mantenimientoEditar.id_mantenimiento);
+            .update(datosAActualizar) // Ahora van solo columnas reales (descripcion, costo, etc.)
+            .eq("id_mantenimiento", id_mantenimiento);
         
         if (error) throw error;
 
-        // 2. Si el usuario le puso una fecha de fin menor o igual a hoy, liberamos el coche
+        // Validación de fecha para liberar coche de forma reactiva
         const hoy = new Date().toISOString().split("T")[0];
-        
-        if (mantenimientoEditar.fecha_fin && mantenimientoEditar.fecha_fin <= hoy) {
-            
-            // Primero obtenemos el id_coche asociado a este mantenimiento desde su detalle
+        if (datosAActualizar.fecha_fin && datosAActualizar.fecha_fin <= hoy) {
             const { data: detalle } = await supabase
                 .from("detalle_mantenimiento")
                 .select("id_coche")
-                .eq("id_mantenimiento", mantenimientoEditar.id_mantenimiento)
+                .eq("id_mantenimiento", id_mantenimiento)
                 .single();
 
             if (detalle?.id_coche) {
-                // Actualizamos el coche correspondiente a "Disponible"
                 await supabase
                     .from("coche")
                     .update({ estado: "Disponible" })
@@ -280,31 +243,62 @@ const cargarListas = async () => {
         }
 
         setMostrarModalEdicion(false);
-        cargarMantenimientos();
-        if (typeof cargarListas === "function") cargarListas(); // Recarga los selectores si aplica
         setToast({ mostrar: true, mensaje: "Mantenimiento actualizado con éxito.", tipo: "exito" });
         
+        await cargarMantenimientos();
+        await cargarListas();
+        
     } catch (err) {
+        console.error("Error al actualizar:", err);
         setToast({ mostrar: true, mensaje: err.message, tipo: "error" });
     }
 };
 
     const eliminarMantenimiento = async () => {
         try {
-            const { error } = await supabase
+            if (!mantenimientoAEliminar) return;
+
+            // SOLUCIÓN INTEGRIDAD: 1. Primero buscar si existe un coche retenido para devolverlo a 'Disponible'
+            const { data: detalle } = await supabase
+                .from("detalle_mantenimiento")
+                .select("id_coche")
+                .eq("id_mantenimiento", mantenimientoAEliminar.id_mantenimiento)
+                .single();
+
+            if (detalle?.id_coche) {
+                await supabase
+                    .from("coche")
+                    .update({ estado: "Disponible" })
+                    .eq("id_coche", detalle.id_coche);
+            }
+
+            // 2. Eliminar primero el registro hijo en 'detalle_mantenimiento'
+            const { error: errorHijo } = await supabase
+                .from("detalle_mantenimiento")
+                .delete()
+                .eq("id_mantenimiento", mantenimientoAEliminar.id_mantenimiento);
+
+            if (errorHijo) throw errorHijo;
+
+            // 3. Ahora sí, eliminar el registro padre en 'mantenimiento'
+            const { error: errorPadre } = await supabase
                 .from("mantenimiento")
                 .delete()
                 .eq("id_mantenimiento", mantenimientoAEliminar.id_mantenimiento);
-            if (error) throw error;
+
+            if (errorPadre) throw errorPadre;
+
             setMostrarModalEliminacion(false);
-            cargarMantenimientos();
-            setToast({ mostrar: true, mensaje: "Mantenimiento eliminado.", tipo: "exito" });
+            setToast({ mostrar: true, mensaje: "Mantenimiento eliminado de forma segura.", tipo: "exito" });
+            
+            await cargarMantenimientos();
+            await cargarListas();
         } catch (err) {
+            console.error("Error al eliminar:", err);
             setToast({ mostrar: true, mensaje: err.message, tipo: "error" });
         }
     };
 
-    // Función para ver el detalle técnico
     const verDetalle = async (id) => {
         try {
             const { data, error } = await supabase
@@ -350,29 +344,15 @@ const cargarListas = async () => {
                             <h3 className="d-flex align-items-center">
                                 <i className="bi bi-tools me-2"></i> Mantenimientos
                             </h3>
-                            <small className="text-muted">
-                                Gestión de Mantenimientos
-                            </small>
+                            <small className="text-muted">Gestión de Mantenimientos</small>
                         </Col>
 
                         <Col className="text-end">
-
-                            <Button
-                                variant="danger"
-                                className="rounded-pill px-4 shadow-sm me-2"
-                                onClick={generarPDF}
-                            >
-                                <i className="bi bi-file-earmark-pdf-fill me-2"></i>
-                                PDF
+                            <Button variant="danger" className="rounded-pill px-4 shadow-sm me-2" onClick={generarPDF}>
+                                <i className="bi bi-file-earmark-pdf-fill me-2"></i> PDF
                             </Button>
-
-                            <Button
-                                variant="danger"
-                                className="rounded-pill px-4 shadow-sm"
-                                onClick={() => setMostrarModal(true)}
-                            >
-                                <i className="bi bi-plus-circle me-2"></i>
-                                Nuevo Mantenimiento
+                            <Button variant="danger" className="rounded-pill px-4 shadow-sm" onClick={() => setMostrarModal(true)}>
+                                <i className="bi bi-plus-circle me-2"></i> Nuevo Mantenimiento
                             </Button>
                         </Col>
                     </Row>
@@ -392,7 +372,6 @@ const cargarListas = async () => {
                         </div>
                     ) : (
                         <>
-                            {/* VISTA EN COMPUTADORA: Se muestra de 'md' en adelante, en móvil se oculta */}
                             <div className="d-none d-md-block">
                                 <TablaMantenimientos
                                     mantenimientos={mantenimientosFiltrados}
@@ -401,8 +380,6 @@ const cargarListas = async () => {
                                     verDetalleMantenimiento={verDetalle}
                                 />
                             </div>
-
-                            {/* VISTA EN MÓVIL: Se muestra en pantallas chicas, de 'md' en adelante se oculta */}
                             <div className="d-block d-md-none">
                                 <TarjetaMantenimiento
                                     mantenimientos={mantenimientosFiltrados}

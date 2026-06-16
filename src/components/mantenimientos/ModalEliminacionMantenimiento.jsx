@@ -25,29 +25,25 @@ const ModalEliminacionMantenimiento = ({
             centered
         >
             <Modal.Header closeButton className="bg-danger text-white">
-                            <Modal.Title>
-                                <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                                Confirmar Eliminación
-                            </Modal.Title>
-                        </Modal.Header>
+                <Modal.Title>
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    Confirmar Eliminación
+                </Modal.Title>
+            </Modal.Header>
 
             <Modal.Body>
-                <p>
-                    ¿Estás seguro de eliminar el mantenimiento:
-                </p>
+                <p>¿Estás seguro de eliminar el mantenimiento?</p>
 
                 <p>
                     <strong>{mantenimientoAEliminar?.descripcion}</strong>
                 </p>
 
                 <p className="text-muted">
-                    {mantenimientoAEliminar?.fecha_inicio} →{" "}
-                    {mantenimientoAEliminar?.fecha_fin}
+                    {mantenimientoAEliminar?.fecha_inicio} → {mantenimientoAEliminar?.fecha_fin}
                 </p>
 
                 <p>
-                    Costo:{" "}
-                    <strong>${mantenimientoAEliminar?.costo}</strong>
+                    Costo: <strong>${mantenimientoAEliminar?.costo}</strong>
                 </p>
             </Modal.Body>
 
@@ -60,15 +56,15 @@ const ModalEliminacionMantenimiento = ({
                     Cancelar
                 </Button>
 
+                {/* CORREGIDO: Ahora ejecuta handleEliminar y tiene el diseño de botón de confirmación */}
                 <Button
-                                    variant="outline-danger"
-                                    size="sm"
-                                    className="rounded-pill"
-                                    onClick={() => abrirModalEliminacion(coche)}
-                                >
-                                    <i className="bi bi-trash-fill me-1"></i>
-                                    Eliminar
-                                </Button>
+                    variant="danger"
+                    onClick={handleEliminar}
+                    disabled={deshabilitado}
+                >
+                    <i className="bi bi-trash-fill me-1"></i>
+                    Confirmar y Eliminar
+                </Button>
             </Modal.Footer>
         </Modal>
     );
