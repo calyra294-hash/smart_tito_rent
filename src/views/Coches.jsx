@@ -304,33 +304,45 @@ const generarPDF = () => {
     // =========================
     const eliminarCoche = async () => {
 
-        const { error } = await supabase
-            .from("coche")
-            .delete()
-            .eq("id_coche", cocheAEliminar.id_coche);
+    // 👇 validación extra
+    const { data: alquiler } = await supabase
+        .from("alquiler")
+        .select("*")
+        .eq("id_coche", cocheAEliminar.id_coche)
+        .maybeSingle();
 
-        if (error) {
-
-            setToast({
-                mostrar: true,
-                mensaje: "Error al eliminar",
-                tipo: "error",
-            });
-
-            return;
-        }
-
-        setMostrarModalEliminacion(false);
-
-        cargarCoches();
-
+    if (alquiler) {
         setToast({
             mostrar: true,
-            mensaje: "Eliminado",
-            tipo: "exito",
+            mensaje: "No se puede eliminar, el vehículo está en alquiler.",
+            tipo: "error",
         });
-    };
+        return;
+    }
 
+    const { error } = await supabase
+        .from("coche")
+        .delete()
+        .eq("id_coche", cocheAEliminar.id_coche);
+
+    if (error) {
+        setToast({
+            mostrar: true,
+            mensaje: "Error al eliminar",
+            tipo: "error",
+        });
+        return;
+    }
+
+    setMostrarModalEliminacion(false);
+    cargarCoches();
+
+    setToast({
+        mostrar: true,
+        mensaje: "Eliminado correctamente",
+        tipo: "exito",
+    });
+};
     // =========================
     // UI
     // =========================

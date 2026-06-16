@@ -24,9 +24,12 @@ const ModalEliminacionMantenimiento = ({
             keyboard={false}
             centered
         >
-            <Modal.Header closeButton>
-                <Modal.Title>Confirmar Eliminación</Modal.Title>
-            </Modal.Header>
+            <Modal.Header closeButton className="bg-danger text-white">
+                            <Modal.Title>
+                                <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                Confirmar Eliminación
+                            </Modal.Title>
+                        </Modal.Header>
 
             <Modal.Body>
                 <p>
@@ -58,12 +61,14 @@ const ModalEliminacionMantenimiento = ({
                 </Button>
 
                 <Button
-                    variant="danger"
-                    onClick={handleEliminar}
-                    disabled={deshabilitado}
-                >
-                    Eliminar
-                </Button>
+                                    variant="outline-danger"
+                                    size="sm"
+                                    className="rounded-pill"
+                                    onClick={() => abrirModalEliminacion(coche)}
+                                >
+                                    <i className="bi bi-trash-fill me-1"></i>
+                                    Eliminar
+                                </Button>
             </Modal.Footer>
         </Modal>
     );

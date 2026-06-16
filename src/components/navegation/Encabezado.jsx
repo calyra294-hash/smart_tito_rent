@@ -9,7 +9,8 @@ const Encabezado = ({
     sidebarCollapsed,
     setSidebarCollapsed
 }) => {
-
+    
+    const esActivo = (ruta) => location.pathname === ruta;
     
     const navigate = useNavigate();
 
@@ -144,7 +145,7 @@ const Encabezado = ({
                     <Nav.Link
                         title="Inicio"
                         onClick={() => manejarNavegacion("/")}
-                        className="sidebar-link"
+                        className={`sidebar-link ${esActivo("/") ? "active" : ""}`}
                     >
                         <i className="bi bi-house-fill"></i>
                         {!sidebarCollapsed && (
@@ -155,7 +156,8 @@ const Encabezado = ({
                     <Nav.Link
                         title="Alquileres"
                         onClick={() => manejarNavegacion("/alquileres")}
-                        className="sidebar-link"
+                        className={`sidebar-link ${esActivo("/alquileres") ? "active" : ""}`}
+                        
                     >
                         <i className="bi bi-bookmark-fill"></i>
                         {!sidebarCollapsed && (
@@ -166,7 +168,7 @@ const Encabezado = ({
                     <Nav.Link
                         title="Coches"
                         onClick={() => manejarNavegacion("/coches")}
-                        className="sidebar-link"
+                        className={`sidebar-link ${esActivo("/coches") ? "active" : ""}`}
                     >
                         <i className="bi bi-car-front-fill"></i>
                         {!sidebarCollapsed && (
@@ -177,7 +179,7 @@ const Encabezado = ({
                     <Nav.Link
                         title="Catálogo"
                         onClick={() => manejarNavegacion("/catalogo")}
-                        className="sidebar-link"
+                        className={`sidebar-link ${esActivo("/catalogo") ? "active" : ""}`}
                     >
                         <i className="bi bi-images"></i>
                         {!sidebarCollapsed && (
@@ -188,7 +190,7 @@ const Encabezado = ({
                     <Nav.Link
                         title="Usuarios"
                         onClick={() => manejarNavegacion("/usuarios")}
-                        className="sidebar-link"
+                        className={`sidebar-link ${esActivo("/usuarios") ? "active" : ""}`}
                     >
                         <i className="bi bi-people-fill"></i>
                         {!sidebarCollapsed && (
@@ -199,7 +201,7 @@ const Encabezado = ({
                     <Nav.Link
                         title="Empleados"
                         onClick={() => manejarNavegacion("/empleados")}
-                        className="sidebar-link"
+                        className={`sidebar-link ${esActivo("/empleados") ? "active" : ""}`}
                     >
                         <i className="bi bi-person-badge-fill"></i>
                         {!sidebarCollapsed && (
@@ -210,7 +212,7 @@ const Encabezado = ({
                     <Nav.Link
                         title="Mantenimientos"
                         onClick={() => manejarNavegacion("/mantenimientos")}
-                        className="sidebar-link"
+                        className={`sidebar-link ${esActivo("/mantenimientos") ? "active" : ""}`}
                     >
                         <i className="bi bi-tools"></i>
                         {!sidebarCollapsed && (
@@ -221,7 +223,7 @@ const Encabezado = ({
                     <Nav.Link
                         title="Dashboard"
                         onClick={() => manejarNavegacion("/dashboard")}
-                        className="sidebar-link"
+                        className={`sidebar-link ${esActivo("/dashboard") ? "active" : ""}`}
                     >
                         <i className="bi bi-bar-chart-fill"></i>
                         {!sidebarCollapsed && (

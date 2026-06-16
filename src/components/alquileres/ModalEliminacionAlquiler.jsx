@@ -32,11 +32,20 @@ const ModalEliminacionAlquiler = ({
             keyboard={false}
             centered
         >
-            <Modal.Header closeButton>
-                <Modal.Title>Confirmar Eliminación</Modal.Title>
-            </Modal.Header>
+            <Modal.Header closeButton className="bg-danger text-white">
+                            <Modal.Title>
+                                <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                Confirmar Eliminación
+                            </Modal.Title>
+                        </Modal.Header>
 
-            <Modal.Body>
+            <Modal.Body className="text-center">
+
+                <i
+                    className="bi bi-trash3-fill text-danger"
+                    style={{ fontSize: "40px" }}
+                ></i>
+
                 <p>
                     ¿Estás seguro de eliminar el alquiler desde{" "}
                     <strong>{alquilerAEliminar?.fecha_inicio}</strong> hasta{" "}
@@ -65,7 +74,7 @@ const ModalEliminacionAlquiler = ({
                     onClick={handleEliminar}
                     disabled={deshabilitado}
                 >
-                    Eliminar
+                    {deshabilitado ? "Eliminando..." : "Eliminar"}
                 </Button>
             </Modal.Footer>
         </Modal>

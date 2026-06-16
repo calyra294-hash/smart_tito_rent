@@ -91,11 +91,12 @@ const ModalEliminacionUsuario = ({
                 </Button>
 
                 <Button
-                    variant="danger"
-                    onClick={handleEliminar}
-                    disabled={deshabilitado}
+                    variant="outline-danger"
+                    size="sm"
+                    className="rounded-pill"
+                    onClick={() => abrirModalEliminacion(coche)}
                 >
-                    <i className="bi bi-trash me-1"></i>
+                    <i className="bi bi-trash-fill me-1"></i>
                     Eliminar
                 </Button>
 

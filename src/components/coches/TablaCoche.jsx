@@ -161,7 +161,7 @@ const TablaCoche = ({
                                             "Disponible"
                                                 ? "bg-success"
                                                 : coche.estado ===
-                                                  "En Alquiler"
+                                                "En Alquiler"
                                                 ? "bg-danger"
                                                 : "bg-warning text-dark"
                                         }`}
