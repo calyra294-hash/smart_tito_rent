@@ -182,7 +182,7 @@ const cargarListas = async () => {
             return;
         }
 
-        // 1. Insertar Mantenimiento
+        // 1. Insertar el encabezado del Mantenimiento
         const { data: mantData, error: mantError } = await supabase
             .from("mantenimiento")
             .insert([{
@@ -197,7 +197,7 @@ const cargarListas = async () => {
 
         if (mantError) throw mantError;
 
-        // 2. Insertar Detalle
+        // 2. Insertar el Detalle del Mantenimiento
         const { error: detalleError } = await supabase
             .from("detalle_mantenimiento")
             .insert([{
@@ -209,40 +209,41 @@ const cargarListas = async () => {
                 partes_cambiadas: "Ninguna"
             }]);
 
+        // Si falla el detalle, borramos el mantenimiento para no dejar basura en la BD
         if (detalleError) {
-            // Revertir mantenimiento si falla el detalle
             await supabase.from("mantenimiento").delete().eq("id_mantenimiento", mantData.id_mantenimiento);
             throw detalleError;
         }
 
-        // 3. NUEVO: Actualizar el estado del coche en la base de datos
+        // 3. Actualizar el estado del coche a 'En Mantenimiento'
         const { error: cocheError } = await supabase
             .from("coche")
-            .update({ estado: "En Mantenimiento" }) // O el nombre exacto de tu estado (ej: "Mantenimiento")
+            .update({ estado: "En Mantenimiento" })
             .eq("id_coche", nuevoMantenimiento.id_coche);
 
-        if (cocheError) {
-            console.error("Error al cambiar el estado del coche:", cocheError);
-            // Opcional: Podrías lanzar el error o dejar que pase si consideras que el mantenimiento ya se guardó
-            throw cocheError;
-        }
+        if (cocheError) throw cocheError;
 
-        // 4. Finalizar proceso con éxito
+        // 4. Cerrar el modal primero para mejorar la experiencia visual (UX)
         setMostrarModal(false);
-        setToast({ mostrar: true, mensaje: "¡Mantenimiento registrado y estado del vehículo actualizado!", tipo: "exito" });
-        
-        // Recargar datos locales
-        cargarMantenimientos();
-        cargarListas(); // Esto recargará tu estado 'coches' local con los nuevos datos
+        setToast({ mostrar: true, mensaje: "¡Mantenimiento registrado y vehículo actualizado con éxito!", tipo: "exito" });
 
-        // Limpiar formulario
+        // 5. Recargar de forma asíncrona pero asegurada todas las consultas
+        await cargarMantenimientos(); 
+        await cargarListas(); // Esto actualiza los coches disponibles en tus selectores locales
+
+        // 6. Limpiar el formulario al final de todo el proceso
         setNuevoMantenimiento({
-            descripcion: "", justificacion: "", fecha_inicio: "",
-            fecha_fin: "", costo: "", id_coche: "", id_empleado: ""
+            descripcion: "", 
+            justificacion: "", 
+            fecha_inicio: "",
+            fecha_fin: "", 
+            costo: "", 
+            id_coche: "", 
+            id_empleado: ""
         });
 
     } catch (error) {
-        console.error("Error completo:", error);
+        console.error("Error completo en el flujo:", error);
         setToast({ mostrar: true, mensaje: "Error: " + error.message, tipo: "error" });
     }
 };
