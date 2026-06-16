@@ -69,14 +69,15 @@ const ModalEliminacionCoche = ({
                 </Button>
 
                 <Button
-                    variant="outline-danger"
-                    size="sm"
-                    className="rounded-pill"
-                    onClick={() => abrirModalEliminacion(coche)}
-                >
-                    <i className="bi bi-trash-fill me-1"></i>
-                    Eliminar
-                </Button>
+    variant="outline-danger"
+    size="sm"
+    className="rounded-pill"
+    onClick={handleEliminar}
+    disabled={deshabilitado}
+>
+    <i className="bi bi-trash-fill me-1"></i>
+    {deshabilitado ? "Eliminando..." : "Eliminar"}
+</Button>
 
             </Modal.Footer>
 
