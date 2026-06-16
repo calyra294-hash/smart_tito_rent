@@ -10,11 +10,13 @@ const Encabezado = ({
     setSidebarCollapsed
 }) => {
     
-    const esActivo = (ruta) => location.pathname === ruta;
+    
     
     const navigate = useNavigate();
 
     const location = useLocation();
+
+    const esActivo = (ruta) => location.pathname === ruta;
 
     const [usuarioLogueado, setUsuarioLogueado] = useState(false);
     const [temaOscuro, setTemaOscuro] = useState(() => {

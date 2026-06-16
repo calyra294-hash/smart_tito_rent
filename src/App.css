@@ -827,3 +827,35 @@ tbody tr:hover {
     background-color: #dc3545; /* rojo activo */
     color: white;
 }
+
+.dashboard-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* tarjetas más limpias */
+.dashboard-kpi-card {
+    border-radius: 16px;
+    transition: transform 0.2s ease;
+}
+
+.dashboard-kpi-card:hover {
+    transform: translateY(-3px);
+}
+
+/* gráficos */
+.dashboard-chart-card {
+    border-radius: 16px;
+    padding: 10px;
+}
+
+/* contenedor general */
+.dashboard-slide-panel {
+    padding: 20px;
+}
+
+.dashboard-pdf-buttons button {
+    border-radius: 12px;
+    font-weight: 500;
+}

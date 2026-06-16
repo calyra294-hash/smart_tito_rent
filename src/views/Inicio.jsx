@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   Container,
@@ -22,9 +23,29 @@ import {
   Pie,
   Cell,
 } from "recharts";
+
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { supabase } from "../database/supabaseconfig";
 import * as XLSX from "xlsx";
 import fondo from "../assets/Inicio_fondo.jpg";
+
+
+
+const pdfTest = () => {
+  const doc = new jsPDF();
+
+  doc.text("Hola", 10, 10);
+
+  autoTable(doc, {
+    head: [["Nombre", "Cantidad"]],
+    body: [["Toyota", 5]],
+  });
+
+  doc.save("test.pdf");
+};
+
 
 const COLORES = [
   "#5e26b2",
@@ -62,7 +83,13 @@ const generarRangoFechas = (desde, hasta) => {
   return fechas;
 };
 
+
+
 const Inicio = () => {
+
+
+
+
   const fechaActual = obtenerFechaLocalManagua();
 
   const [cargando, setCargando] = useState(true);
@@ -111,6 +138,7 @@ const Inicio = () => {
       const { count: totalMantenimientos } = mantenimientosResp;
 
       if (errorAlquileres) throw errorAlquileres;
+// =======================================================//
 
       const idsAlquileres = alquileres?.map((alquiler) => alquiler.id_alquiler) || [];
 
@@ -209,6 +237,188 @@ const Inicio = () => {
       setCargando(false);
     }
   };
+
+const pdfIngresosPorDia = () => {
+  const doc = new jsPDF();
+
+  const fechaHoy = new Date().toLocaleDateString("es-NI");
+  const nombreNegocio = "Tito's Rent a Car";
+
+  const data = estadisticas?.ingresosPorDia ?? [];
+
+  // =========================
+  // ENCABEZADO BONITO
+  // =========================
+  doc.setFontSize(18);
+  doc.setTextColor(40);
+  doc.text(nombreNegocio, 105, 15, { align: "center" });
+
+  doc.setFontSize(14);
+  doc.text("Reporte de Ingresos por Día", 105, 23, { align: "center" });
+
+  doc.setFontSize(11);
+  doc.setTextColor(100);
+  doc.text(`Fecha del reporte: ${fechaHoy}`, 14, 35);
+  doc.text(`Rango: ${fechaDesde} - ${fechaHasta}`, 14, 42);
+
+  // =========================
+  // TABLA
+  // =========================
+  autoTable(doc, {
+    startY: 50,
+    head: [["Fecha", "Total"]],
+    body: data.length
+      ? data.map((d) => [
+          d.fecha,
+          `C$ ${formatearMoneda(d.total)}`
+        ])
+      : [["Sin datos", "0"]],
+    headStyles: {
+      fillColor: [220, 53, 69], // rojo tipo Bootstrap danger
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 3,
+    },
+  });
+
+  // =========================
+  // PIE DE PÁGINA
+  // =========================
+  const pageHeight = doc.internal.pageSize.height;
+  doc.setFontSize(10);
+  doc.setTextColor(120);
+  doc.text(
+    "Generado automáticamente por el sistema de gestión",
+    105,
+    pageHeight - 10,
+    { align: "center" }
+  );
+
+  doc.save("ingresos_por_dia.pdf");
+};
+
+const pdfVehiculosMasAlquilados = () => {
+  const doc = new jsPDF();
+
+  const fecha = new Date().toLocaleDateString("es-NI");
+
+  const nombreNegocio = "Tito's Rent a Car";
+
+  // =========================
+  // ENCABEZADO
+  // =========================
+  doc.setFontSize(18);
+  doc.text(nombreNegocio, 105, 15, { align: "center" });
+
+  doc.setFontSize(14);
+  doc.text("Vehículos más alquilados", 105, 23, { align: "center" });
+
+  doc.setFontSize(11);
+  doc.setTextColor(100);
+  doc.text(`Fecha: ${fecha}`, 14, 35);
+
+  // =========================
+  // TABLA
+  // =========================
+  autoTable(doc, {
+    startY: 45,
+    head: [["Vehículo", "Cantidad"]],
+
+    body:
+      estadisticas.vehiculosMasAlquilados?.length > 0
+        ? estadisticas.vehiculosMasAlquilados.map((v) => [
+            v.name,
+            v.value,
+          ])
+        : [["Sin datos", "0"]],
+
+    headStyles: {
+      fillColor: [220, 53, 69], // 🔴 rojo bonito tipo danger
+      textColor: 255,
+      fontStyle: "bold",
+    },
+
+    styles: {
+      fontSize: 10,
+      cellPadding: 4,
+    },
+
+    alternateRowStyles: {
+      fillColor: [245, 245, 245], // gris suave
+    },
+
+    columnStyles: {
+      0: { cellWidth: 120 }, // vehículo más ancho
+      1: { halign: "center" }, // cantidad centrada
+    },
+  });
+
+  // =========================
+  // PIE DE PÁGINA
+  // =========================
+  const pageHeight = doc.internal.pageSize.height;
+
+  doc.setFontSize(10);
+  doc.setTextColor(120);
+  doc.text(
+    "Reporte generado automáticamente por el sistema",
+    105,
+    pageHeight - 10,
+    { align: "center" }
+  );
+
+  doc.save("vehiculos_mas_alquilados.pdf");
+};
+
+const pdfGeneralDashboard = async () => {
+  const doc = new jsPDF();
+
+  const fecha = new Date().toLocaleDateString("es-NI");
+
+  // ===== TITULO =====
+  doc.setFontSize(18);
+  doc.text("Tito's Rent a Car", 105, 15, { align: "center" });
+
+  doc.setFontSize(12);
+  doc.text(`Fecha: ${fecha}`, 105, 23, { align: "center" });
+
+  // ===== TABLA =====
+  autoTable(doc, {
+    startY: 30,
+    head: [["Métrica", "Valor"]],
+    body: [
+      ["Alquileres", estadisticas.totalAlquileres],
+      ["Vehículos", estadisticas.totalVehiculos],
+      ["Usuarios", estadisticas.totalUsuarios],
+      ["Mantenimientos", estadisticas.totalMantenimientos],
+      ["Ingresos", `C$ ${formatearMoneda(estadisticas.ingresosTotales)}`],
+    ],
+    headStyles: {
+      fillColor: [220, 53, 69],
+      textColor: 255,
+    },
+  });
+
+  // ===== CAPTURAR GRÁFICO =====
+  const grafico = document.getElementById("grafico-ingresos");
+
+  if (grafico) {
+    const canvas = await html2canvas(grafico);
+    const imgData = canvas.toDataURL("image/png");
+
+    const imgWidth = 180;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    doc.addPage();
+    doc.text("Ingresos por Día", 14, 15);
+    doc.addImage(imgData, "PNG", 15, 25, imgWidth, imgHeight);
+  }
+
+  doc.save("dashboard.pdf");
+};
 
   const descargarExcel = async () => {
     try {
@@ -418,7 +628,7 @@ const Inicio = () => {
                     <p className="mt-3 mb-0">Cargando estadísticas...</p>
                   </Container>
                 ) : (
-                  <div className="dashboard-slide-content">
+                  <div className="dashboard-slide-content dashboard-modern">
                     <Row className="g-3 mb-3 dashboard-kpis-row">
                       <Col md={6} lg={3}>
                         <Card
@@ -468,6 +678,42 @@ const Inicio = () => {
                         </Card>
                       </Col>
                     </Row>
+
+                    {/* ================= BOTONES PDF ================= */}
+<Row className="g-3 mb-3 dashboard-pdf-buttons">
+  <Col md={4}>
+    <Button
+      variant="outline-danger"
+      className="w-100"
+      onClick={pdfIngresosPorDia}
+    >
+      <i className="bi bi-file-earmark-pdf me-2"></i>
+      PDF Ingresos
+    </Button>
+  </Col>
+
+  <Col md={4}>
+    <Button
+      variant="outline-danger"
+      className="w-100"
+      onClick={pdfVehiculosMasAlquilados}
+    >
+      <i className="bi bi-file-earmark-pdf me-2"></i>
+      PDF Vehículos
+    </Button>
+  </Col>
+
+  <Col md={4}>
+    <Button
+      variant="danger"
+      className="w-100"
+      onClick={pdfGeneralDashboard}
+    >
+      <i className="bi bi-file-earmark-pdf-fill me-2"></i>
+      PDF General
+    </Button>
+  </Col>
+</Row>
 
                     <Row className="g-3 flex-grow-1 align-items-stretch dashboard-graficos-row">
                       <Col lg={8} className="d-flex">
