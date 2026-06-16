@@ -94,12 +94,14 @@ const Encabezado = ({
 
                 <div className="d-flex align-items-center gap-3">
 
-                    <button
-                        className="btn btn-outline-light btn-sm"
-                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                    >
-                        <i className="bi bi-list"></i>
-                    </button>
+                    {usuarioLogueado && (
+                        <button
+                            className="btn btn-outline-light btn-sm"
+                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        >
+                            <i className="bi bi-list"></i>
+                        </button>
+                    )}
 
                     <div
                         className="topbar-logo"
