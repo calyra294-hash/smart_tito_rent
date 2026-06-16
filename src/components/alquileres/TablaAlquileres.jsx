@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Spinner, Button, Badge } from "react-bootstrap";
+import { Table, Spinner, Button, Badge, Pagination } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const TablaAlquileres = ({
@@ -11,6 +11,22 @@ const TablaAlquileres = ({
 
     const [loading, setLoading] = useState(true);
 
+    const [paginaActual, setPaginaActual] = useState(1);
+
+const registrosPorPagina = 6;
+
+const indiceUltimo = paginaActual * registrosPorPagina;
+const indicePrimero = indiceUltimo - registrosPorPagina;
+
+const alquileresPaginados = alquileres.slice(
+    indicePrimero,
+    indiceUltimo
+);
+
+const totalPaginas = Math.ceil(
+    alquileres.length / registrosPorPagina
+);
+
     useEffect(() => {
 
         if (alquileres) {
@@ -18,6 +34,7 @@ const TablaAlquileres = ({
         }
 
     }, [alquileres]);
+
 
     // 🔥 COLORES ESTADO
     const obtenerColorEstado = (estado) => {
@@ -47,6 +64,8 @@ const TablaAlquileres = ({
                 </div>
 
             ) : (
+
+                <>
 
                 <Table
                     striped
@@ -80,7 +99,7 @@ const TablaAlquileres = ({
 
                     <tbody>
 
-                        {alquileres.map((alquiler) => (
+                        {alquileresPaginados.map((alquiler) => (
 
                             <tr key={alquiler.id_alquiler}>
 
@@ -151,8 +170,38 @@ const TablaAlquileres = ({
                     </tbody>
 
                 </Table>
+                <div className="d-flex justify-content-center mt-3">
+    <Pagination>
 
+        <Pagination.Prev
+            disabled={paginaActual === 1}
+            onClick={() => setPaginaActual(paginaActual - 1)}
+        >
+            <i className="bi bi-chevron-left"></i>
+        </Pagination.Prev>
+
+        {[...Array(totalPaginas)].map((_, index) => (
+            <Pagination.Item
+                key={index + 1}
+                active={index + 1 === paginaActual}
+                onClick={() => setPaginaActual(index + 1)}
+            >
+                {index + 1}
+            </Pagination.Item>
+        ))}
+
+        <Pagination.Next
+            disabled={paginaActual === totalPaginas}
+            onClick={() => setPaginaActual(paginaActual + 1)}
+        >
+            <i className="bi bi-chevron-right"></i>
+        </Pagination.Next>
+
+    </Pagination>
+</div>
+</>
             )}
+            
         </>
     );
 };

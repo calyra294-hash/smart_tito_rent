@@ -102,7 +102,7 @@ const ModalEdicionMantenimiento = ({
                 </Button>
 
                 <Button
-                    variant="primary"
+                    variant="danger"
                     onClick={handleActualizar}
                     disabled={
                         deshabilitado ||

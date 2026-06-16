@@ -221,7 +221,7 @@ const ModalRegistroUsuario = ({
                 </Button>
 
                 <Button
-                    variant="primary"
+                    variant="danger"
                     onClick={handleRegistrar}
                     disabled={
                         !nuevoUsuario?.nombre1 ||

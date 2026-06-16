@@ -859,3 +859,65 @@ tbody tr:hover {
     border-radius: 12px;
     font-weight: 500;
 }
+
+.pagination .page-item.active .page-link {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.pagination .page-link {
+    color: #dc3545;
+}
+
+.pagination .page-link:hover {
+    color: white;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* ========================= PAGINACIÓN ========================= */
+
+.pagination .page-link {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px !important;
+    margin: 0 3px;
+    transition: all 0.2s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.35);
+}
+
+/* MODO OSCURO */
+
+.dark-theme .pagination .page-link {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.dark-theme .pagination .page-link:hover {
+    background-color: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.dark-theme .pagination .page-item.active .page-link {
+    background-color: #ef4444;
+    border-color: #ef4444;
+    color: white;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}

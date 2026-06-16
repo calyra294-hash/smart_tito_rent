@@ -42,7 +42,7 @@ const ModalRegistroMantenimiento = ({
                 value={nuevoMantenimiento.id_coche}
                 onChange={manejoCambioInput}
             >
-               {coches.map((coche) => (
+            {coches.map((coche) => (
     <option key={coche.id_coche} value={coche.id_coche}>
         {/* Usamos marca, modelo y placa como dice la captura */}
         {coche.marca} {coche.modelo} - {coche.placa}
@@ -139,7 +139,7 @@ const ModalRegistroMantenimiento = ({
                 </Button>
 
                 <Button
-                    variant="primary"
+                    variant="danger"
                     onClick={handleRegistrar}
                     disabled={
                         deshabilitado ||
