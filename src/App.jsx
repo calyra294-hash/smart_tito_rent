@@ -7,6 +7,7 @@ import Inicio from "./views/Inicio";
 import Catalogo from "./views/Catalogo.jsx"; 
 import Alquileres from "./views/Alquileres";
 import Coches from "./views/Coches";
+import Categoria from "./views/Categorias.jsx"
 import Detalles_Alquiler from "./views/Detalles_Alquiler.jsx"; 
 import Detalles_Mantenimiento from "./views/Detalles_Mantenimiento.jsx"; 
 import Empleados from "./views/Empleados.jsx"; 
@@ -48,6 +49,7 @@ const App = () => {
 
           <Route path="/alquileres" element={<RutaProtegida><Alquileres /></RutaProtegida>} />
           <Route path="/coches" element={<RutaProtegida><Coches /></RutaProtegida>} />
+          <Route path="/categorias" element={<RutaProtegida><Categoria /></RutaProtegida>} />
           <Route path="/detalles_alquiler" element={<RutaProtegida><Detalles_Alquiler /></RutaProtegida>} />
           <Route path="/detalles_mantenimiento" element={<RutaProtegida><Detalles_Mantenimiento /></RutaProtegida>} />
           <Route path="/empleados" element={<RutaProtegida><Empleados /></RutaProtegida>} />

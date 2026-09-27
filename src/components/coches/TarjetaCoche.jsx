@@ -1,289 +1,101 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Card, Row, Col, Spinner, Button } from "react-bootstrap";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import React from "react";
+import { Row, Col, Button, Image } from "react-bootstrap";
+import { useSeleccionTarjeta } from "../../components/herramientas/tarjetas/useSeleccionTarjeta";
+import TarjetaBase from "../herramientas/tarjetas/TarjetaBase";
 
-const TarjetaCoche = ({
+const TarjetaCoche = ( {
     coches,
     abrirModalEdicion,
     abrirModalEliminacion,
-}) => {
-
-    const [cargando, setCargando] = useState(true);
-
-    const [idTarjetaActiva, setIdTarjetaActiva] =
-        useState(null);
-
-    useEffect(() => {
-
-        setCargando(!(coches && coches.length > 0));
-
-    }, [coches]);
-
-    const manejarTeclaEscape = useCallback((evento) => {
-
-        if (evento.key === "Escape") {
-            setIdTarjetaActiva(null);
-        }
-
-    }, []);
-
-    useEffect(() => {
-
-        window.addEventListener(
-            "keydown",
-            manejarTeclaEscape
-        );
-
-        return () =>
-            window.removeEventListener(
-                "keydown",
-                manejarTeclaEscape
-            );
-
-    }, [manejarTeclaEscape]);
-
-    const alternarTarjetaActiva = (id) => {
-
-        setIdTarjetaActiva((anterior) =>
-            anterior === id ? null : id
-        );
-    };
+} ) => {
+    const { idActivo, alternarActivo, cerrar } = useSeleccionTarjeta();
 
     return (
-        <>
-
-            {cargando ? (
-
-                <div className="text-center my-5">
-
-                    <h5>Cargando vehículos...</h5>
-
-                    <Spinner
-                        animation="border"
-                        variant="primary"
-                        role="status"
-                    />
-
-                </div>
-
-            ) : (
-
-                <div>
-
-                    {coches.map((coche) => {
-
-                        const tarjetaActiva =
-                            idTarjetaActiva === coche.id_coche;
-
-                        return (
-
-                            <Card
-                                key={coche.id_coche}
-                                className="
-                                    mb-3
-                                    border-0
-                                    rounded-3
-                                    shadow-sm
-                                    w-100
-                                    position-relative
-                                "
-                                onClick={() =>
-                                    alternarTarjetaActiva(
-                                        coche.id_coche
-                                    )
-                                }
-                                tabIndex={0}
+        <div>
+            { coches?.map( ( coche ) => (
+                <TarjetaBase
+                    key={ coche.id_coche }
+                    id={ coche.id_coche }
+                    esActivo={ idActivo === coche.id_coche }
+                    alHacerClick={ () => alternarActivo( coche.id_coche ) }
+                    ariaLabel={ `Vehículo ${ coche.marca } ${ coche.modelo }` }
+                    acciones={
+                        <>
+                            <Button
+                                variant="outline-warning"
+                                size="sm"
+                                onClick={ () => {
+                                    abrirModalEdicion( coche );
+                                    cerrar();
+                                } }
                             >
-
-                                <Card.Body
-                                    className={`
-                                        p-2
-                                        ${
-                                            tarjetaActiva
-                                                ? "bg-light"
-                                                : ""
-                                        }
-                                    `}
+                                <i className="bi bi-pencil"></i>
+                            </Button>
+                            <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={ () => {
+                                    abrirModalEliminacion( coche );
+                                    cerrar();
+                                } }
+                            >
+                                <i className="bi bi-trash"></i>
+                            </Button>
+                        </>
+                    }
+                >
+                    {/* Contenido específico del Vehículo */ }
+                    <Row className="align-items-center gx-3">
+                        {/* Imagen / Placeholder */ }
+                        <Col xs={ 3 } className="text-center">
+                            { coche.url_imagen ? (
+                                <Image
+                                    src={ coche.url_imagen }
+                                    alt={ `${ coche.marca } ${ coche.modelo }` }
+                                    rounded
+                                    fluid
+                                    style={ { maxHeight: "50px", objectFit: "cover" } }
+                                />
+                            ) : (
+                                <div
+                                    className="bg-light d-flex align-items-center justify-content-center rounded"
+                                    style={ { height: "50px" } }
                                 >
+                                    <i className="bi bi-car-front text-muted fs-4"></i>
+                                </div>
+                            ) }
+                        </Col>
 
-                                    <Row className="align-items-center gx-3">
+                        {/* Detalles principales */ }
+                        <Col xs={ 6 } className="text-start">
+                            <div className="fw-semibold text-truncate">
+                                { coche.marca } { coche.modelo }
+                            </div>
+                            <div className="small text-muted text-truncate">
+                                { coche.placa } • { coche.color }
+                            </div>
+                            <div className="small text-primary fw-semibold">
+                                ${ parseFloat( coche.valor_dia || 0 ).toFixed( 2 ) } / día
+                            </div>
+                        </Col>
 
-                                        {/* IMAGEN */}
-                                        <Col xs={2} className="px-2">
-
-                                            {coche.url_imagen ? (
-
-                                                <img
-                                                    src={coche.url_imagen}
-                                                    alt={coche.modelo}
-                                                    className="rounded w-100"
-                                                    style={{
-                                                        height: "60px",
-                                                        objectFit: "cover",
-                                                    }}
-                                                />
-
-                                            ) : (
-
-                                                <div
-                                                    className="
-                                                        bg-light
-                                                        d-flex
-                                                        align-items-center
-                                                        justify-content-center
-                                                        rounded
-                                                    "
-                                                    style={{
-                                                        height: "60px",
-                                                    }}
-                                                >
-
-                                                    <i
-                                                        className="
-                                                            bi bi-car-front
-                                                            text-muted
-                                                            fs-3
-                                                        "
-                                                    ></i>
-
-                                                </div>
-
-                                            )}
-
-                                        </Col>
-
-                                        {/* INFORMACIÓN */}
-                                        <Col
-                                            xs={7}
-                                            className="text-start"
-                                        >
-
-                                            <div className="fw-semibold text-truncate">
-                                                {coche.marca}{" "}
-                                                {coche.modelo}
-                                            </div>
-
-                                            <div className="small text-muted text-truncate">
-                                                {coche.placa} •{" "}
-                                                {coche.color}
-                                            </div>
-
-                                            <div className="small text-primary">
-                                                ${coche.valor_dia} / día
-                                            </div>
-
-                                        </Col>
-
-                                        {/* ESTADO */}
-                                        <Col
-                                            xs={3}
-                                            className="
-                                                d-flex
-                                                flex-column
-                                                align-items-end
-                                                justify-content-center
-                                                text-end
-                                            "
-                                        >
-
-                                            <div
-                                                className={`
-                                                    fw-semibold
-                                                    small
-                                                    ${
-                                                        coche.estado ===
-                                                        "Disponible"
-                                                            ? "text-success"
-                                                            : coche.estado ===
-                                                            "En Alquiler"
-                                                            ? "text-warning"
-                                                            : "text-danger"
-                                                    }
-                                                `}
-                                            >
-
-                                                {coche.estado}
-
-                                            </div>
-
-                                        </Col>
-
-                                    </Row>
-
-                                </Card.Body>
-
-                                {/* BOTONES */}
-                                {tarjetaActiva && (
-
-                                    <div
-                                        className="
-                                            position-absolute
-                                            top-50
-                                            start-50
-                                            translate-middle
-                                            bg-white
-                                            rounded
-                                            shadow
-                                            p-2
-                                            d-flex
-                                            gap-2
-                                        "
-                                        onClick={(e) =>
-                                            e.stopPropagation()
-                                        }
-                                    >
-
-                                        <Button
-                                            variant="outline-warning"
-                                            size="sm"
-                                            onClick={() => {
-
-                                                abrirModalEdicion(
-                                                    coche
-                                                );
-
-                                                setIdTarjetaActiva(
-                                                    null
-                                                );
-                                            }}
-                                        >
-
-                                            <i className="bi bi-pencil"></i>
-
-                                        </Button>
-
-                                        <Button
-                                            variant="outline-danger"
-                                            size="sm"
-                                            onClick={() => {
-
-                                                abrirModalEliminacion(
-                                                    coche
-                                                );
-
-                                                setIdTarjetaActiva(
-                                                    null
-                                                );
-                                            }}
-                                        >
-
-                                            <i className="bi bi-trash"></i>
-
-                                        </Button>
-
-                                    </div>
-
-                                )}
-
-                            </Card>
-                        );
-                    })}
-
-                </div>
-
-            )}
-
-        </>
+                        {/* Estado del Vehículo */ }
+                        <Col xs={ 3 } className="text-end">
+                            <div
+                                className={ `fw-semibold small ${ coche.estado === "Disponible"
+                                        ? "text-success"
+                                        : coche.estado === "En Alquiler"
+                                            ? "text-warning"
+                                            : "text-danger"
+                                    }` }
+                            >
+                                { coche.estado }
+                            </div>
+                        </Col>
+                    </Row>
+                </TarjetaBase>
+            ) ) }
+        </div>
     );
 };
 

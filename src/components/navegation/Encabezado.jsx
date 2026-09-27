@@ -1,60 +1,62 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Nav } from "react-bootstrap";
 import logo from "../../assets/logo-titos.png";
 import { supabase } from "../../database/supabaseconfig";
 
-const Encabezado = ({
+const Encabezado = ( {
     sidebarCollapsed,
     setSidebarCollapsed
-}) => {
-    
-    
-    
+} ) => {
+
+
+
     const navigate = useNavigate();
 
     const location = useLocation();
 
-    const esActivo = (ruta) => location.pathname === ruta;
+    const esActivo = ( ruta ) => location.pathname === ruta;
 
-    const [usuarioLogueado, setUsuarioLogueado] = useState(false);
-    const [temaOscuro, setTemaOscuro] = useState(() => {
-        return localStorage.getItem("tema") === "dark";
-    });
+    const [ usuarioLogueado, setUsuarioLogueado ] = useState( false );
+    const [ temaOscuro, setTemaOscuro ] = useState( () => {
+        return localStorage.getItem( "tema" ) === "dark";
+    } );
 
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            setUsuarioLogueado(!!data.session);
-        });
+    useEffect( () => {
+        supabase.auth.getSession().then( ( { data } ) => {
+            setUsuarioLogueado( !!data.session );
+        } );
 
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUsuarioLogueado(!!session);
-        });
+        } = supabase.auth.onAuthStateChange( ( _event, session ) => {
+            setUsuarioLogueado( !!session );
+        } );
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [] );
 
-    useEffect(() => {
-        if (temaOscuro) {
-            document.body.classList.add("dark-theme");
-        } else {
-            document.body.classList.remove("dark-theme");
+    useEffect( () => {
+        if ( temaOscuro )
+        {
+            document.body.classList.add( "dark-theme" );
+        } else
+        {
+            document.body.classList.remove( "dark-theme" );
         }
 
         localStorage.setItem(
             "tema",
             temaOscuro ? "dark" : "light"
         );
-    }, [temaOscuro]);
+    }, [ temaOscuro ] );
 
     // =========================
     // NAVEGACIÓN
     // =========================
-    const manejarNavegacion = (ruta) => {
-        navigate(ruta);
+    const manejarNavegacion = ( ruta ) => {
+        navigate( ruta );
     };
 
     // =========================
@@ -62,17 +64,19 @@ const Encabezado = ({
     // =========================
     const cerrarSesion = async () => {
 
-        try {
+        try
+        {
 
             const { error } = await supabase.auth.signOut();
 
-            if (error) throw error;
+            if ( error ) throw error;
 
-            localStorage.removeItem("usuario-supabase");
+            localStorage.removeItem( "usuario-supabase" );
 
-            navigate("/login");
+            navigate( "/login" );
 
-        } catch (err) {
+        } catch ( err )
+        {
 
             console.error(
                 "Error cerrando sesión:",
@@ -82,34 +86,34 @@ const Encabezado = ({
     };
 
     const cambiarTema = () => {
-        setTemaOscuro((prev) => !prev);
+        setTemaOscuro( ( prev ) => !prev );
     };
 
     return (
         <>
 
 
-            {/* ===== TOPBAR ===== */}
+            {/* ===== TOPBAR ===== */ }
             <div className="topbar">
 
                 <div className="d-flex align-items-center gap-3">
 
-                    {usuarioLogueado && (
+                    { usuarioLogueado && (
                         <button
                             className="btn btn-outline-light btn-sm"
-                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                            onClick={ () => setSidebarCollapsed( !sidebarCollapsed ) }
                         >
                             <i className="bi bi-list"></i>
                         </button>
-                    )}
+                    ) }
 
                     <div
                         className="topbar-logo"
-                        onClick={() => manejarNavegacion("/")}
-                        style={{ cursor: "pointer" }}
+                        onClick={ () => manejarNavegacion( "/" ) }
+                        style={ { cursor: "pointer" } }
                     >
                         <img
-                            src={logo}
+                            src={ logo }
                             alt="Logo Tito's Rent A Car"
                             className="logo-titos"
                         />
@@ -122,117 +126,128 @@ const Encabezado = ({
                     <button
                         className="btn btn-outline-light btn-sm"
                         type="button"
-                        onClick={cambiarTema}
+                        onClick={ cambiarTema }
                     >
-                        <i className={`bi ${temaOscuro ? "bi-moon-stars-fill" : "bi-sun-fill"}`}></i>
+                        <i className={ `bi ${ temaOscuro ? "bi-moon-stars-fill" : "bi-sun-fill" }` }></i>
                     </button>
 
-                    {usuarioLogueado && (
+                    { usuarioLogueado && (
                         <button
                             className="btn btn-danger btn-sm"
-                            onClick={cerrarSesion}
+                            onClick={ cerrarSesion }
                         >
                             <i className="bi bi-box-arrow-right me-2"></i>
                             Cerrar sesión
                         </button>
-                    )}
+                    ) }
 
                 </div>
 
             </div>
 
-            {/* ===== SIDEBAR ===== */}
-            <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+            {/* ===== SIDEBAR ===== */ }
+            <div className={ `sidebar ${ sidebarCollapsed ? "collapsed" : "" }` }>
 
                 <Nav className="flex-column">
 
                     <Nav.Link
                         title="Inicio"
-                        onClick={() => manejarNavegacion("/")}
-                        className={`sidebar-link ${esActivo("/") ? "active" : ""}`}
+                        onClick={ () => manejarNavegacion( "/" ) }
+                        className={ `sidebar-link ${ esActivo( "/" ) ? "active" : "" }` }
                     >
                         <i className="bi bi-house-fill"></i>
-                        {!sidebarCollapsed && (
+                        { !sidebarCollapsed && (
                             <span className="ms-2">Inicio</span>
-                        )}
+                        ) }
                     </Nav.Link>
 
                     <Nav.Link
                         title="Alquileres"
-                        onClick={() => manejarNavegacion("/alquileres")}
-                        className={`sidebar-link ${esActivo("/alquileres") ? "active" : ""}`}
-                        
+                        onClick={ () => manejarNavegacion( "/alquileres" ) }
+                        className={ `sidebar-link ${ esActivo( "/alquileres" ) ? "active" : "" }` }
+
                     >
                         <i className="bi bi-bookmark-fill"></i>
-                        {!sidebarCollapsed && (
+                        { !sidebarCollapsed && (
                             <span className="ms-2">Alquileres</span>
-                        )}
+                        ) }
                     </Nav.Link>
 
                     <Nav.Link
                         title="Coches"
-                        onClick={() => manejarNavegacion("/coches")}
-                        className={`sidebar-link ${esActivo("/coches") ? "active" : ""}`}
+                        onClick={ () => manejarNavegacion( "/coches" ) }
+                        className={ `sidebar-link ${ esActivo( "/coches" ) ? "active" : "" }` }
                     >
                         <i className="bi bi-car-front-fill"></i>
-                        {!sidebarCollapsed && (
+                        { !sidebarCollapsed && (
                             <span className="ms-2">Coches</span>
-                        )}
+                        ) }
+                    </Nav.Link>
+
+                    <Nav.Link
+                        title="Categorias"
+                        onClick={ () => manejarNavegacion( "/categorias" ) }
+                        className={ `sidebar-link ${ esActivo( "/categorias" ) ? "active" : "" }` }
+                    >
+                        <i className="bi-tags-fill"></i>
+                        { !sidebarCollapsed && (
+                            <span className="ms-2">Categorias</span>
+                        ) }
                     </Nav.Link>
 
                     <Nav.Link
                         title="Catálogo"
-                        onClick={() => manejarNavegacion("/catalogo")}
-                        className={`sidebar-link ${esActivo("/catalogo") ? "active" : ""}`}
+                        onClick={ () => manejarNavegacion( "/catalogo" ) }
+                        className={ `sidebar-link ${ esActivo( "/catalogo" ) ? "active" : "" }` }
                     >
                         <i className="bi bi-images"></i>
-                        {!sidebarCollapsed && (
+                        { !sidebarCollapsed && (
                             <span className="ms-2">Catálogo</span>
-                        )}
+                        ) }
                     </Nav.Link>
 
                     <Nav.Link
                         title="Usuarios"
-                        onClick={() => manejarNavegacion("/usuarios")}
-                        className={`sidebar-link ${esActivo("/usuarios") ? "active" : ""}`}
+                        onClick={ () => manejarNavegacion( "/usuarios" ) }
+                        className={ `sidebar-link ${ esActivo( "/usuarios" ) ? "active" : "" }` }
                     >
                         <i className="bi bi-people-fill"></i>
-                        {!sidebarCollapsed && (
+                        { !sidebarCollapsed && (
                             <span className="ms-2">Usuarios</span>
-                        )}
+                        ) }
                     </Nav.Link>
 
                     <Nav.Link
                         title="Empleados"
-                        onClick={() => manejarNavegacion("/empleados")}
-                        className={`sidebar-link ${esActivo("/empleados") ? "active" : ""}`}
+                        onClick={ () => manejarNavegacion( "/empleados" ) }
+                        className={ `sidebar-link ${ esActivo( "/empleados" ) ? "active" : "" }` }
                     >
                         <i className="bi bi-person-badge-fill"></i>
-                        {!sidebarCollapsed && (
+                        { !sidebarCollapsed && (
                             <span className="ms-2">Empleados</span>
-                        )}
+                        ) }
                     </Nav.Link>
 
                     <Nav.Link
                         title="Mantenimientos"
-                        onClick={() => manejarNavegacion("/mantenimientos")}
-                        className={`sidebar-link ${esActivo("/mantenimientos") ? "active" : ""}`}
+                        onClick={ () => manejarNavegacion( "/mantenimientos" ) }
+                        className={ `sidebar-link ${ esActivo( "/mantenimientos" ) ? "active" : "" }` }
                     >
                         <i className="bi bi-tools"></i>
-                        {!sidebarCollapsed && (
+                        { !sidebarCollapsed && (
                             <span className="ms-2">Mantenimientos</span>
-                        )}
+                        ) }
                     </Nav.Link>
 
                     <Nav.Link
                         title="Dashboard"
-                        onClick={() => manejarNavegacion("/dashboard")}
-                        className={`sidebar-link ${esActivo("/dashboard") ? "active" : ""}`}
+                        onClick={ () => manejarNavegacion( "/dashboard" ) }
+                        className={ `sidebar-link ${ esActivo( "/dashboard" ) ? "active" : "" }` }
                     >
                         <i className="bi bi-bar-chart-fill"></i>
-                        {!sidebarCollapsed && (
+                        { !sidebarCollapsed && (
                             <span className="ms-2">Dashboard</span>
-                        )}
+                        ) }
                     </Nav.Link>
 
                 </Nav>
