@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Table, Button, Image, Pagination } from "react-bootstrap";
+import React, { useState, useEffect, useMemo } from "react";
+import { Table, Button, Image, Pagination, Badge } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const TablaCoche = ( {
@@ -8,24 +8,38 @@ const TablaCoche = ( {
     abrirModalEliminacion,
 } ) => {
 
+    // Helper defensivo para fechas (ISO YYYY-MM-DD -> Formato local)
     const formatearFecha = ( fecha ) => {
         if ( !fecha ) return "-";
-        return new Date( fecha ).toLocaleDateString( "es-NI" );
+        // Añadimos T00:00:00 para evitar despasajes por UTC/zona horaria
+        const fechaObj = new Date( fecha.includes("T") ? fecha : `${fecha}T00:00:00` );
+        return isNaN( fechaObj.getTime() ) ? "-" : fechaObj.toLocaleDateString( "es-NI" );
     };
 
-
+    // Helper para formatear moneda en Córdobas (NIO)
     const formatearMoneda = ( valor ) => {
-        if ( !valor ) return "C$ 0.00";
-        return Number( valor ).toLocaleString( "es-NI", {
+        const numero = parseFloat( valor );
+        if ( isNaN( numero ) ) return "C$ 0.00";
+        return numero.toLocaleString( "es-NI", {
             style: "currency",
             currency: "NIO",
         } );
     };
 
+    // Parser seguro para el string JSON de detalles_tecnicos
+    const parsearDetallesTecnicos = ( detallesRaw ) => {
+        if ( !detallesRaw ) return null;
+        if ( typeof detallesRaw === "object" ) return detallesRaw; // Por si en el futuro viene deserializado
+        try {
+            return JSON.parse( detallesRaw );
+        } catch ( error ) {
+            console.error( "Error al parsear detalles_tecnicos:", error );
+            return null;
+        }
+    };
 
     const obtenerBadgeEstado = ( estado ) => {
-        switch ( estado )
-        {
+        switch ( estado ) {
             case "Disponible":
                 return "bg-success";
             case "En Alquiler":
@@ -35,26 +49,27 @@ const TablaCoche = ( {
         }
     };
 
-    // 📌 PAGINACIÓN
+    // 📌 PAGINACIÓN & ESTADO
     const [ paginaActual, setPaginaActual ] = useState( 1 );
     const registrosPorPagina = 5;
 
     const totalPaginas = Math.ceil( ( coches?.length || 0 ) / registrosPorPagina );
 
-    // Ajuste reactivo si se eliminan registros y la página actual queda fuera de rango
+    // Reajuste de página activa si el array de vehículos cambia (ej. tras una eliminación)
     useEffect( () => {
-        if ( paginaActual > totalPaginas && totalPaginas > 0 )
-        {
+        if ( paginaActual > totalPaginas && totalPaginas > 0 ) {
             setPaginaActual( totalPaginas );
         }
     }, [ coches?.length, totalPaginas, paginaActual ] );
 
-    const indiceUltimo = paginaActual * registrosPorPagina;
-    const indicePrimero = indiceUltimo - registrosPorPagina;
-    const cochesPaginados = ( coches || [] ).slice( indicePrimero, indiceUltimo );
+    // Memoización del rebanado de datos (Slicing) para optimizar re-renders
+    const cochesPaginados = useMemo( () => {
+        const indiceUltimo = paginaActual * registrosPorPagina;
+        const indicePrimero = indiceUltimo - registrosPorPagina;
+        return ( coches || [] ).slice( indicePrimero, indiceUltimo );
+    }, [ coches, paginaActual, registrosPorPagina ] );
 
-    if ( !coches || coches.length === 0 )
-    {
+    if ( !coches || coches.length === 0 ) {
         return (
             <div className="text-center my-4">
                 <h5 className="text-muted">No hay vehículos registrados</h5>
@@ -75,27 +90,31 @@ const TablaCoche = ( {
                         <th>Año</th>
                         <th>Placa</th>
                         <th className="d-none d-md-table-cell">Color</th>
+                        <th className="d-none d-lg-table-cell">Especificaciones</th>
                         <th>Valor/Día</th>
                         <th>Estado</th>
-                        <th className="d-none d-lg-table-cell">Fecha Registro</th>
+                        <th className="d-none d-xl-table-cell">Fecha Registro</th>
                         <th className="text-center">Acciones</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     { cochesPaginados.map( ( coche ) => {
-                        // Sombra defensiva: soporta tanto objeto anidado (ej. coche.categorias.nombre_categoria)
-                        // como un campo plano (ej. coche.categoria)
+                        // Sombra defensiva de la categoría
                         const nombreCategoria =
                             coche.categorias?.nombre_categoria ||
                             coche.categoria ||
+                            `Cat. ID: ${coche.id_categoria}` ||
                             "Sin categoría";
+
+                        // Parsing seguro de los datos JSON
+                        const detalles = parsearDetallesTecnicos( coche.detalles_tecnicos );
 
                         return (
                             <tr key={ coche.id_coche }>
                                 <td>{ coche.id_coche }</td>
 
-                                {/* 📌 IMAGEN */ }
+                                {/* 📌 IMAGEN */}
                                 <td>
                                     { coche.url_imagen ? (
                                         <Image
@@ -123,7 +142,7 @@ const TablaCoche = ( {
                                 <td className="fw-semibold">{ coche.marca }</td>
                                 <td>{ coche.modelo }</td>
 
-                                {/* 🏷️ NUEVA COLUMNA CATEGORÍA */ }
+                                {/* 🏷️ CATEGORÍA */}
                                 <td>
                                     <span className="badge bg-light text-dark border">
                                         { nombreCategoria }
@@ -137,26 +156,41 @@ const TablaCoche = ( {
                                     { coche.color }
                                 </td>
 
-                                {/* 💰 VALOR */ }
-                                <td className="fw-bold">
+                                {/* ⚙️ DETALLES TÉCNICOS (JSON desestructurado) */}
+                                <td className="d-none d-lg-table-cell">
+                                    { detalles ? (
+                                        <small className="text-muted d-block">
+                                            <i className="bi bi-gear-wide-connected me-1"></i>
+                                            { detalles.transmision } | { detalles.combustible }
+                                            <br />
+                                            <i className="bi bi-people me-1"></i>
+                                            { detalles.pasajeros } Pasajeros
+                                        </small>
+                                    ) : (
+                                        <small className="text-muted">N/A</small>
+                                    ) }
+                                </td>
+
+                                {/* 💰 VALOR */}
+                                <td className="fw-bold text-nowrap">
                                     { formatearMoneda( coche.valor_dia ) }
                                 </td>
 
-                                {/* 📌 ESTADO */ }
+                                {/* 📌 ESTADO */}
                                 <td>
-                                    <span className={ `badge px-3 py-2 ${ obtenerBadgeEstado( coche.estado ) }` }>
+                                    <Badge className={ `px-3 py-2 ${ obtenerBadgeEstado( coche.estado ) }` }>
                                         { coche.estado }
-                                    </span>
+                                    </Badge>
                                 </td>
 
-                                {/* 📅 FECHA */ }
-                                <td className="d-none d-lg-table-cell">
+                                {/* 📅 FECHA REGISTRO */}
+                                <td className="d-none d-xl-table-cell">
                                     <small className="text-muted">
                                         { formatearFecha( coche.fecha_registro ) }
                                     </small>
                                 </td>
 
-                                {/* 📌 BOTONES ACCIONES */ }
+                                {/* 📌 BOTONES ACCIONES */}
                                 <td className="text-center">
                                     <Button
                                         variant="outline-warning"
@@ -183,7 +217,7 @@ const TablaCoche = ( {
                 </tbody>
             </Table>
 
-            {/* 📌 PAGINACIÓN */ }
+            {/* 📌 PAGINACIÓN */}
             { totalPaginas > 1 && (
                 <div className="d-flex justify-content-center mt-3">
                     <Pagination>

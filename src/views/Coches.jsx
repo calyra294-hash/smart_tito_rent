@@ -16,8 +16,27 @@ import NotificacionOperacion from "../components/NotificacionOperacion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-const Coches = () => {
+// Estructura o plantilla base por defecto para detalles técnicos
+const DETALLES_TECNICOS_DEFAULT = {
+    pasajeros: 4,
+    combustible: "Gasolina",
+    transmision: "Manual",
+    equipamiento: [],
+};
 
+// Helper seguro para parsear detalles_tecnicos (por si Supabase retorna string o jsonb)
+const parsearDetallesTecnicos = (detalles) => {
+    if (!detalles) return DETALLES_TECNICOS_DEFAULT;
+    if (typeof detalles === "object") return detalles;
+    try {
+        return JSON.parse(detalles);
+    } catch (e) {
+        console.error("Error al parsear detalles_tecnicos:", e);
+        return DETALLES_TECNICOS_DEFAULT;
+    }
+};
+
+const Coches = () => {
     const manejoCambioArchivoActualizar = ( e ) => {
         const file = e.target.files[ 0 ] || null;
         setCocheEditar( ( prev ) => ( {
@@ -33,7 +52,6 @@ const Coches = () => {
     } );
 
     const notificarAlUsuario = ( mensaje, tipo = "exito" ) => {
-        // Si por error se pasa un objeto en lugar de un string (ej: { message: "...", tipo: "..." })
         if ( typeof mensaje === "object" && mensaje !== null )
         {
             const msgTexto = mensaje.mensaje || mensaje.message || JSON.stringify( mensaje );
@@ -57,6 +75,7 @@ const Coches = () => {
 
     const [ mostrarModal, setMostrarModal ] = useState( false );
 
+    // Estado inicial de nuevo coche con detalles_tecnicos
     const [ nuevoCoche, setNuevoCoche ] = useState( {
         marca: "",
         modelo: "",
@@ -65,8 +84,9 @@ const Coches = () => {
         color: "",
         valor_dia: "",
         estado: "Disponible",
-        id_categoria: "", // Atributo de vinculación FK
+        id_categoria: "",
         archivo: null,
+        detalles_tecnicos: DETALLES_TECNICOS_DEFAULT,
     } );
 
     const [ coches, setCoches ] = useState( [] );
@@ -139,7 +159,6 @@ const Coches = () => {
     const cargarCoches = async () => {
         setCargando( true );
 
-        // Inclusión relacional con la tabla 'categorias' (FK id_categoria)
         const { data, error } = await supabase
             .from( "coche" )
             .select( "*, categorias(id_categoria, nombre_categoria)" )
@@ -169,18 +188,29 @@ const Coches = () => {
     }, [] );
 
     // =========================
-    // FILTRO
+    // FILTRO (Incapaz de romper si el campo técnico o equipamiento viene variado)
     // =========================
     useEffect( () => {
         const texto = textoBusqueda.toLowerCase();
 
         setCochesFiltrados(
-            coches.filter( ( c ) =>
-                [ c.marca, c.modelo, c.placa, c.estado, c.categorias?.nombre_categoria ]
-                    .some( ( campo ) =>
-                        campo?.toLowerCase().includes( texto )
-                    )
-            )
+            coches.filter( ( c ) => {
+                const detalles = parsearDetallesTecnicos( c.detalles_tecnicos );
+                const equipamientoTexto = Array.isArray( detalles.equipamiento )
+                    ? detalles.equipamiento.join( " " )
+                    : "";
+
+                return [
+                    c.marca,
+                    c.modelo,
+                    c.placa,
+                    c.estado,
+                    c.categorias?.nombre_categoria,
+                    detalles.combustible,
+                    detalles.transmision,
+                    equipamientoTexto,
+                ].some( ( campo ) => campo?.toLowerCase().includes( texto ) );
+            } )
         );
 
     }, [ textoBusqueda, coches ] );
@@ -194,6 +224,17 @@ const Coches = () => {
         setNuevoCoche( ( prev ) => ( {
             ...prev,
             [ name ]: value,
+        } ) );
+    };
+
+    // Manejador específico para el objeto anidado detalles_tecnicos
+    const manejoCambioDetallesTecnicos = ( campoTecnico, valor ) => {
+        setNuevoCoche( ( prev ) => ( {
+            ...prev,
+            detalles_tecnicos: {
+                ...prev.detalles_tecnicos,
+                [ campoTecnico ]: valor,
+            },
         } ) );
     };
 
@@ -216,7 +257,21 @@ const Coches = () => {
         } ) );
     };
 
-    // Execución para registro de categoría express vinculada al coche actual
+    // Manejador de detalles técnicos para edición
+    const manejoCambioDetallesTecnicosEdicion = ( campoTecnico, valor ) => {
+        setCocheEditar( ( prev ) => {
+            const detallesActuales = parsearDetallesTecnicos( prev.detalles_tecnicos );
+            return {
+                ...prev,
+                detalles_tecnicos: {
+                    ...detallesActuales,
+                    [ campoTecnico ]: valor,
+                },
+            };
+        } );
+    };
+
+    // Ejecución para registro de categoría express
     const ejecutarCreacionCategoriaExpress = async () => {
         await agregarCategoria();
         if ( categorias.length > 0 )
@@ -254,6 +309,11 @@ const Coches = () => {
                 urlImagen = data.publicUrl;
             }
 
+            // Normalizamos/Serializamos detalles_tecnicos
+            const detallesAInsertar = typeof nuevoCoche.detalles_tecnicos === "object"
+                ? JSON.stringify( nuevoCoche.detalles_tecnicos )
+                : nuevoCoche.detalles_tecnicos;
+
             const { error } = await supabase
                 .from( "coche" )
                 .insert( [
@@ -266,6 +326,7 @@ const Coches = () => {
                         valor_dia: Number( nuevoCoche.valor_dia ),
                         estado: nuevoCoche.estado,
                         id_categoria: nuevoCoche.id_categoria ? Number( nuevoCoche.id_categoria ) : null,
+                        detalles_tecnicos: detallesAInsertar,
                         fecha_registro: new Date()
                             .toISOString()
                             .split( "T" )[ 0 ],
@@ -287,6 +348,7 @@ const Coches = () => {
                 estado: "Disponible",
                 id_categoria: "",
                 archivo: null,
+                detalles_tecnicos: DETALLES_TECNICOS_DEFAULT,
             } );
 
             cargarCoches();
@@ -315,9 +377,8 @@ const Coches = () => {
     const actualizarCoche = async () => {
         try
         {
-            let urlImagen = cocheEditar.url_imagen; // Conserva la imagen anterior por defecto
+            let urlImagen = cocheEditar.url_imagen;
 
-            // 1. Si seleccionó un nuevo archivo de imagen
             if ( cocheEditar.archivo )
             {
                 const nombreArchivo = `${ Date.now() }_${ cocheEditar.archivo.name }`;
@@ -335,7 +396,10 @@ const Coches = () => {
                 urlImagen = data.publicUrl;
             }
 
-            // 2. Actualizar todos los campos en la tabla
+            const detallesAActualizar = typeof cocheEditar.detalles_tecnicos === "object"
+                ? JSON.stringify( cocheEditar.detalles_tecnicos )
+                : cocheEditar.detalles_tecnicos;
+
             const { error } = await supabase
                 .from( "coche" )
                 .update( {
@@ -347,6 +411,7 @@ const Coches = () => {
                     valor_dia: Number( cocheEditar.valor_dia ),
                     estado: cocheEditar.estado,
                     id_categoria: cocheEditar.id_categoria ? Number( cocheEditar.id_categoria ) : null,
+                    detalles_tecnicos: detallesAActualizar,
                     url_imagen: urlImagen,
                 } )
                 .eq( "id_coche", cocheEditar.id_coche );
@@ -463,7 +528,7 @@ const Coches = () => {
                                 manejarCambioBusqueda={ ( e ) =>
                                     setTextoBusqueda( e.target.value )
                                 }
-                                placeholder="Buscar Vehículo..."
+                                placeholder="Buscar Vehículo por marca, modelo, combustible, equipamiento..."
                             />
                         </Col>
                     </Row>
@@ -476,7 +541,10 @@ const Coches = () => {
                         <TablaCoche
                             coches={ cochesFiltrados }
                             abrirModalEdicion={ ( c ) => {
-                                setCocheEditar( c );
+                                setCocheEditar( {
+                                    ...c,
+                                    detalles_tecnicos: parsearDetallesTecnicos( c.detalles_tecnicos )
+                                } );
                                 setMostrarModalEdicion( true );
                             } }
                             abrirModalEliminacion={ ( c ) => {
@@ -491,6 +559,7 @@ const Coches = () => {
                         setMostrarModal={ setMostrarModal }
                         nuevoCoche={ nuevoCoche }
                         manejoCambioInput={ manejoCambioInput }
+                        manejoCambioDetallesTecnicos={ manejoCambioDetallesTecnicos }
                         manejoCambioArchivo={ manejoCambioArchivo }
                         agregarCoche={ agregarCoche }
                         categorias={ categorias }
@@ -511,6 +580,7 @@ const Coches = () => {
                         setMostrarModalEdicion={ setMostrarModalEdicion }
                         cocheEditar={ cocheEditar }
                         manejoCambioInputEdicion={ manejoCambioInputEdicion }
+                        manejoCambioDetallesTecnicosEdicion={ manejoCambioDetallesTecnicosEdicion }
                         actualizarCoche={ actualizarCoche }
                         categorias={ categorias }
                     />
