@@ -439,7 +439,7 @@ const generarPDF = () => {
 
                             <Button
                                 variant="danger"
-                                className="rounded-pill px-4 shadow-sm"
+                                className="rounded-pill px-4 shadow-sm me-2"
                                 onClick={() => setMostrarModal(true)}
                             >
                                 <i className="bi bi-plus-circle me-2"></i>

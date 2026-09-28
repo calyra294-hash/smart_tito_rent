@@ -7,13 +7,13 @@ const TablaCoche = ( {
     abrirModalEdicion,
     abrirModalEliminacion,
 } ) => {
-    // 📌 FORMATEAR FECHA
+
     const formatearFecha = ( fecha ) => {
         if ( !fecha ) return "-";
         return new Date( fecha ).toLocaleDateString( "es-NI" );
     };
 
-    // 📌 FORMATEAR MONEDA
+
     const formatearMoneda = ( valor ) => {
         if ( !valor ) return "C$ 0.00";
         return Number( valor ).toLocaleString( "es-NI", {
@@ -22,7 +22,7 @@ const TablaCoche = ( {
         } );
     };
 
-    // 📌 HELPER PARA BADGES DE ESTADO
+
     const obtenerBadgeEstado = ( estado ) => {
         switch ( estado )
         {

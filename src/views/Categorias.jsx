@@ -111,17 +111,22 @@ const Categorias = () => {
   } = useClipboard();
 
   return (
+    <div className="inicio-contenedor">
+            <div className="contenedor-dashboard">
+
     <Container className="mt-3">
+
       {/* Título y Botón de creación superior */}
-      <Row className="align-items-center mb-3">
-        <Col xs={9} sm={7} md={7} lg={7} className="d-flex align-items-center">
-          <h3 className="mb-0">
-            <i className="bi-bookmark-plus-fill me-2"></i> Categorías
+      <Row className="align-items-center mb-3" >
+        <Col xs={9} sm={7} md={7} lg={7} className="d-flex align-items-center" >
+          <h3 className="mb-0" >
+            <i className="bi-bookmark-plus-fill me-2 text-danger" ></i> Categorías
           </h3>
-        </Col>
+        </Col> 
+
         <Col xs={3} sm={5} md={5} lg={5} className="text-end">
-          <Button onClick={() => setMostrarModal(true)} size="md">
-            <i className="bi-plus-lg"></i>
+          <Button onClick={() => setMostrarModal(true)} size="md" variant="danger"> 
+            <i className="bi-plus-lg "></i>
             <span className="d-none d-sm-inline ms-2">Nueva Categoría</span>
           </Button>
         </Col>
@@ -255,6 +260,8 @@ const Categorias = () => {
         </>
       )}
     </Container>
+    </div>
+        </div>
   );
 };
 
