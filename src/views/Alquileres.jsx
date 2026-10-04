@@ -66,6 +66,16 @@ const Alquileres = () => {
 
     const [detalleAlquiler, setDetalleAlquiler] = useState([]);
 
+    const [mostrarModalDevolucion, setMostrarModalDevolucion] = useState(false);
+    const [alquilerADevolver, setAlquilerADevolver] = useState(null);
+    const [fechaDevolucion, setFechaDevolucion] = useState(
+        new Date().toISOString().split("T")[0]
+    );
+    const [montoFinal, setMontoFinal] = useState("");
+    const [estadoGeneral, setEstadoGeneral] = useState("Bueno");
+    const [kilometrajeDevolucion, setKilometrajeDevolucion] = useState("");
+    const [nivelCombustible, setNivelCombustible] = useState("1/2");
+
 
     // === PDF ============////
 
@@ -332,7 +342,7 @@ const Alquileres = () => {
         const inicio = new Date(nuevoAlquiler.fecha_inicio);
         const fin = new Date(nuevoAlquiler.fecha_fin);
 
-        // 👇 PONLO AQUÍ
+        
         if (fin < inicio) {
             setNuevoAlquiler(prev => ({
                 ...prev,
@@ -627,6 +637,140 @@ const Alquileres = () => {
         setMostrarModalEliminacion(true);
     };
 
+    const abrirModalDevolucion = async (alquiler) => {
+        try {
+            const { data: detalle, error } = await supabase
+                .from("detalle_alquiler")
+                .select(`
+                id_detalle_alquiler,
+                id_usuario,
+                id_coche,
+                valor_dia,
+                cantidad_dias,
+                precio_total,
+                usuario:id_usuario (
+                    nombre1,
+                    apellido1
+                ),
+                coche:id_coche (
+                    marca,
+                    modelo,
+                    placa
+                )
+            `)
+                .eq("id_alquiler", alquiler.id_alquiler)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            setAlquilerADevolver({
+                ...alquiler,
+                detalle: detalle || null,
+            });
+
+            setFechaDevolucion(
+                new Date().toISOString().split("T")[0]
+            );
+
+            setMontoFinal(
+                detalle?.precio_total
+                    ? String(detalle.precio_total)
+                    : ""
+            );
+
+            setEstadoGeneral("Bueno");
+            setKilometrajeDevolucion("");
+            setNivelCombustible("1/2");
+
+            setMostrarModalDevolucion(true);
+        } catch (error) {
+            console.log(error);
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al cargar la información del alquiler.",
+                tipo: "error",
+            });
+        }
+    };
+
+    const registrarDevolucion = async () => {
+        try {
+            if (!alquilerADevolver?.id_alquiler) {
+                return;
+            }
+
+            if (!fechaDevolucion || !montoFinal) {
+                setToast({
+                    mostrar: true,
+                    mensaje: "Debe completar la fecha de devolución y el monto final.",
+                    tipo: "advertencia",
+                });
+                return;
+            }
+
+            const especificaciones = {
+                estado_general: estadoGeneral,
+                kilometraje_devolucion: kilometrajeDevolucion
+                    ? Number(kilometrajeDevolucion)
+                    : null,
+                nivel_combustible: nivelCombustible,
+            };
+
+            const { error: errorAlquiler } = await supabase
+                .from("alquiler")
+                .update({
+                    fecha_entrega:
+                        alquilerADevolver.fecha_entrega ||
+                        alquilerADevolver.fecha_inicio,
+                    fecha_devolucion: fechaDevolucion,
+                    monto_final: Number(montoFinal),
+                    especificaciones: especificaciones,
+                    estado: "Finalizado",
+                })
+                .eq(
+                    "id_alquiler",
+                    alquilerADevolver.id_alquiler
+                );
+
+            if (errorAlquiler) throw errorAlquiler;
+
+            if (alquilerADevolver.detalle?.id_coche) {
+                const { error: errorCoche } = await supabase
+                    .from("coche")
+                    .update({
+                        estado: "Disponible",
+                    })
+                    .eq(
+                        "id_coche",
+                        alquilerADevolver.detalle.id_coche
+                    );
+
+                if (errorCoche) throw errorCoche;
+            }
+
+            setMostrarModalDevolucion(false);
+            setAlquilerADevolver(null);
+
+            await cargarAlquileres();
+            await cargarDatos();
+
+            setToast({
+                mostrar: true,
+                mensaje: "Devolución registrada correctamente.",
+                tipo: "exito",
+            });
+        } catch (error) {
+            console.log(error);
+
+            setToast({
+                mostrar: true,
+                mensaje: "Error al registrar la devolución.",
+                tipo: "error",
+            });
+        }
+    };
+
     return (
 
         <div className="inicio-contenedor">
@@ -721,22 +865,24 @@ const Alquileres = () => {
                                 <>
                                     {/* VISTA DE ESCRITORIO (PC): Oculta en móviles */}
                                     <div className="d-none d-md-block">
-                                        <TablaAlquileres
-                                            alquileres={alquileresFiltrados}
-                                            abrirModalEdicion={abrirModalEdicion}
-                                            abrirModalEliminacion={abrirModalEliminacion}
-                                            verDetalleAlquiler={verDetalleAlquiler} // <-- Agregado aquí también por si acaso
-                                        />
+                                            <TablaAlquileres
+                                                alquileres={alquileresFiltrados}
+                                                abrirModalEdicion={abrirModalEdicion}
+                                                abrirModalEliminacion={abrirModalEliminacion}
+                                                verDetalleAlquiler={verDetalleAlquiler}
+                                                registrarDevolucion={abrirModalDevolucion}
+                                            />
                                     </div>
 
                                     {/* VISTA MÓVIL: Visible en smartphones */}
                                     <div className="d-block d-md-none">
-                                        <TarjetaAlquiler
-                                            alquileres={alquileresFiltrados}
-                                            abrirModalEdicion={abrirModalEdicion}
-                                            abrirModalEliminacion={abrirModalEliminacion}
-                                            verDetalleAlquiler={verDetalleAlquiler} // <-- ¡Solucionado!
-                                        />
+                                            <TarjetaAlquiler
+                                                alquileres={alquileresFiltrados}
+                                                abrirModalEdicion={abrirModalEdicion}
+                                                abrirModalEliminacion={abrirModalEliminacion}
+                                                verDetalleAlquiler={verDetalleAlquiler}
+                                                registrarDevolucion={abrirModalDevolucion}
+                                            />
                                     </div>
                                 </>
                             )}
@@ -786,6 +932,185 @@ const Alquileres = () => {
                         enviarCorreoAlquileres={enviarCorreoAlquileres}
                         totalAlquileres={alquileres.length}
                     />
+
+                    {mostrarModalDevolucion && (
+                        <div
+                            className="modal fade show d-block"
+                            tabIndex="-1"
+                            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+                        >
+                            <div className="modal-dialog modal-dialog-centered">
+                                <div className="modal-content">
+
+                                    <div className="modal-header bg-success text-white">
+                                        <h5 className="modal-title">
+                                            <i className="bi bi-car-front-fill me-2"></i>
+                                            Registrar devolución
+                                        </h5>
+
+                                        <button
+                                            type="button"
+                                            className="btn-close btn-close-white"
+                                            onClick={() =>
+                                                setMostrarModalDevolucion(false)
+                                            }
+                                        ></button>
+                                    </div>
+
+                                    <div className="modal-body">
+
+                                        {alquilerADevolver && (
+                                            <div className="alert alert-light border mb-3">
+                                                <strong>
+                                                    Alquiler #{alquilerADevolver.id_alquiler}
+                                                </strong>
+
+                                                {alquilerADevolver.detalle?.usuario && (
+                                                    <div className="small mt-1">
+                                                        <i className="bi bi-person me-1"></i>
+                                                        Cliente:{" "}
+                                                        {
+                                                            alquilerADevolver.detalle.usuario
+                                                                .nombre1
+                                                        }{" "}
+                                                        {
+                                                            alquilerADevolver.detalle.usuario
+                                                                .apellido1
+                                                        }
+                                                    </div>
+                                                )}
+
+                                                {alquilerADevolver.detalle?.coche && (
+                                                    <div className="small mt-1">
+                                                        <i className="bi bi-car-front me-1"></i>
+                                                        Vehículo:{" "}
+                                                        {
+                                                            alquilerADevolver.detalle.coche
+                                                                .marca
+                                                        }{" "}
+                                                        {
+                                                            alquilerADevolver.detalle.coche
+                                                                .modelo
+                                                        }
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Fecha de devolución
+                                            </label>
+
+                                            <input
+                                                type="date"
+                                                className="form-control"
+                                                value={fechaDevolucion}
+                                                onChange={(e) =>
+                                                    setFechaDevolucion(e.target.value)
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Monto final
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                min="0"
+                                                step="0.01"
+                                                value={montoFinal}
+                                                onChange={(e) =>
+                                                    setMontoFinal(e.target.value)
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Estado general del vehículo
+                                            </label>
+
+                                            <select
+                                                className="form-select"
+                                                value={estadoGeneral}
+                                                onChange={(e) =>
+                                                    setEstadoGeneral(e.target.value)
+                                                }
+                                            >
+                                                <option value="Bueno">Bueno</option>
+                                                <option value="Regular">Regular</option>
+                                                <option value="Malo">Malo</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Kilometraje de devolución
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                min="0"
+                                                placeholder="Ej. 45750"
+                                                value={kilometrajeDevolucion}
+                                                onChange={(e) =>
+                                                    setKilometrajeDevolucion(
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Nivel de combustible
+                                            </label>
+
+                                            <select
+                                                className="form-select"
+                                                value={nivelCombustible}
+                                                onChange={(e) =>
+                                                    setNivelCombustible(e.target.value)
+                                                }
+                                            >
+                                                <option value="Lleno">Lleno</option>
+                                                <option value="3/4">3/4</option>
+                                                <option value="1/2">1/2</option>
+                                                <option value="1/4">1/4</option>
+                                                <option value="Vacío">Vacío</option>
+                                            </select>
+                                        </div>
+
+                                    </div>
+
+                                    <div className="modal-footer">
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() =>
+                                                setMostrarModalDevolucion(false)
+                                            }
+                                        >
+                                            Cancelar
+                                        </Button>
+
+                                        <Button
+                                            variant="success"
+                                            onClick={registrarDevolucion}
+                                        >
+                                            <i className="bi bi-check-circle me-1"></i>
+                                            Confirmar devolución
+                                        </Button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <NotificacionOperacion
                         mostrar={toast.mostrar}
