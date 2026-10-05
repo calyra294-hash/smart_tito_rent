@@ -1,23 +1,34 @@
 import React, { useState, useEffect } from "react";
+
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
+
 import { supabase } from "../database/supabaseconfig";
+
 import emailjs from "@emailjs/browser";
+
 import ModalEnvioCorreoAlquileres from "../components/alquileres/ModalEnvioCorreoAlquileres";
 
 import ModalRegistroAlquiler from "../components/alquileres/ModalRegistroAlquiler";
+
 import ModalEdicionAlquiler from "../components/alquileres/ModalEdicionAlquiler";
+
 import ModalEliminacionAlquiler from "../components/alquileres/ModalEliminacionAlquiler";
+
 import ModalDetalleAlquiler from "../components/alquileres/ModalDetalleAlquiler";
+
 import TarjetaAlquiler from "../components/alquileres/TarjetaAlquiler";
+
 import TablaAlquileres from "../components/alquileres/TablaAlquileres";
 
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
+
 import NotificacionOperacion from "../components/NotificacionOperacion";
+
 import jsPDF from "jspdf";
+
 import autoTable from "jspdf-autotable";
 
 const Alquileres = () => {
-
     const [toast, setToast] = useState({
         mostrar: false,
         mensaje: "",
@@ -43,14 +54,16 @@ const Alquileres = () => {
 
     const [alquileres, setAlquileres] = useState([]);
     const [alquileresFiltrados, setAlquileresFiltrados] = useState([]);
-    const [textoBusqueda, setTextoBusqueda] = useState("");
 
+    const [textoBusqueda, setTextoBusqueda] = useState("");
     const [cargando, setCargando] = useState(true);
 
     const [usuarios, setUsuarios] = useState([]);
     const [coches, setCoches] = useState([]);
 
-    const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
+    const [mostrarModalEliminacion, setMostrarModalEliminacion] =
+        useState(false);
+
     const [alquilerAEliminar, setAlquilerAEliminar] = useState(null);
 
     const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
@@ -63,86 +76,181 @@ const Alquileres = () => {
     });
 
     const [mostrarModalDetalle, setMostrarModalDetalle] = useState(false);
-
     const [detalleAlquiler, setDetalleAlquiler] = useState([]);
 
-    const [mostrarModalDevolucion, setMostrarModalDevolucion] = useState(false);
+    const [mostrarModalDevolucion, setMostrarModalDevolucion] =
+        useState(false);
+
     const [alquilerADevolver, setAlquilerADevolver] = useState(null);
+
     const [fechaDevolucion, setFechaDevolucion] = useState(
         new Date().toISOString().split("T")[0]
     );
+
     const [montoFinal, setMontoFinal] = useState("");
     const [estadoGeneral, setEstadoGeneral] = useState("Bueno");
     const [kilometrajeDevolucion, setKilometrajeDevolucion] = useState("");
     const [nivelCombustible, setNivelCombustible] = useState("1/2");
 
+    // =========================================================
+    // SINCRONIZAR ESTADO DE LOS COCHES CON LOS ALQUILERES
+    // =========================================================
 
-    // === PDF ============////
+    const sincronizarEstadosCoches = async (alquileresData) => {
+        try {
+            const idsAlquiler = (alquileresData || [])
+                .map((alquiler) => alquiler.id_alquiler)
+                .filter(Boolean);
+
+            if (idsAlquiler.length === 0) {
+                return;
+            }
+
+            const { data: detalles, error: errorDetalles } = await supabase
+                .from("detalle_alquiler")
+                .select("id_alquiler, id_coche")
+                .in("id_alquiler", idsAlquiler);
+
+            if (errorDetalles) {
+                throw errorDetalles;
+            }
+
+            const idsCoche = [
+                ...new Set(
+                    (detalles || [])
+                        .map((detalle) => detalle.id_coche)
+                        .filter(Boolean)
+                ),
+            ];
+
+            for (const idCoche of idsCoche) {
+                const detallesCoche = (detalles || []).filter(
+                    (detalle) =>
+                        String(detalle.id_coche) === String(idCoche)
+                );
+
+                const idsAlquilerCoche = detallesCoche.map(
+                    (detalle) => detalle.id_alquiler
+                );
+
+                const alquileresDelCoche = (alquileresData || []).filter(
+                    (alquiler) =>
+                        idsAlquilerCoche.includes(alquiler.id_alquiler)
+                );
+
+                const tieneAlquilerActivo =
+                    alquileresDelCoche.some((alquiler) => {
+                        const estado = String(
+                            alquiler.estado || ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+                        return (
+                            estado === "en curso" ||
+                            estado === "en alquiler" ||
+                            estado === "alquilado" ||
+                            estado === "activo" ||
+                            estado === "vigente"
+                        );
+                    });
+
+                const nuevoEstado = tieneAlquilerActivo
+                    ? "En Alquiler"
+                    : "Disponible";
+
+                const { error: errorCoche } = await supabase
+                    .from("coche")
+                    .update({
+                        estado: nuevoEstado,
+                    })
+                    .eq("id_coche", idCoche);
+
+                if (errorCoche) {
+                    console.error(
+                        `Error actualizando coche ${idCoche}:`,
+                        errorCoche
+                    );
+                }
+            }
+        } catch (error) {
+            console.error(
+                "Error al sincronizar estados de coches:",
+                error
+            );
+        }
+    };
+
+    // =========================================================
+    // PDF
+    // =========================================================
 
     const generarPDF = () => {
+        const doc = new jsPDF();
 
-    const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Reporte de Alquileres", 14, 15);
 
-    doc.setFontSize(18);
-    doc.text("Reporte de Alquileres", 14, 15);
+        doc.setFontSize(10);
 
-    doc.setFontSize(10);
-    doc.text(
-        `Fecha: ${new Date().toLocaleDateString()}`,
-        14,
-        22
-    );
+        doc.text(
+            `Fecha: ${new Date().toLocaleDateString()}`,
+            14,
+            22
+        );
 
-    doc.text(
-        `Total de alquileres: ${alquileresFiltrados.length}`,
-        14,
-        28
-    );
+        doc.text(
+            `Total de alquileres: ${alquileresFiltrados.length}`,
+            14,
+            28
+        );
 
-    autoTable(doc, {
-        startY: 35,
-        head: [[
-            "ID",
-            "Fecha Inicio",
-            "Fecha Fin",
-            "Estado"
-        ]],
-        body: alquileresFiltrados.map(a => [
-            a.id_alquiler,
-            a.fecha_inicio,
-            a.fecha_fin,
-            a.estado
-        ]),
+        autoTable(doc, {
+            startY: 35,
+            head: [[
+                "ID",
+                "Fecha Inicio",
+                "Fecha Fin",
+                "Estado"
+            ]],
+            body: alquileresFiltrados.map((a) => [
+                a.id_alquiler,
+                a.fecha_inicio,
+                a.fecha_fin,
+                a.estado
+            ]),
+            headStyles: {
+                fillColor: [185, 28, 28],
+                textColor: [255, 255, 255]
+            }
+        });
 
-        headStyles: {
-        fillColor: [185, 28, 28], // Rojo Tito's Rent
-        textColor: [255, 255, 255]
-    }
-    });
+        doc.save("reporte_alquileres.pdf");
+    };
 
-    doc.save("reporte_alquileres.pdf");
-};
-    // =========================
+    // =========================================================
     // CARGAR ALQUILERES
-    // =========================
+    // =========================================================
+
     const cargarAlquileres = async () => {
-
         try {
-
             setCargando(true);
 
             const { data, error } = await supabase
                 .from("alquiler")
                 .select("*")
-                .order("id_alquiler", { ascending: true });
+                .order("id_alquiler", {
+                    ascending: true
+                });
 
             if (error) throw error;
 
             setAlquileres(data || []);
             setAlquileresFiltrados(data || []);
 
+            // Sincronizar automáticamente los coches
+            await sincronizarEstadosCoches(data || []);
         } catch (error) {
-
             console.log(error);
 
             setToast({
@@ -150,18 +258,16 @@ const Alquileres = () => {
                 mensaje: "Error al cargar alquileres",
                 tipo: "error",
             });
-
         } finally {
-
             setCargando(false);
         }
     };
 
-    // =========================
+    // =========================================================
     // CARGAR DATOS
-    // =========================
-    const cargarDatos = async () => {
+    // =========================================================
 
+    const cargarDatos = async () => {
         const { data: usuariosData } = await supabase
             .from("usuario")
             .select("*");
@@ -176,17 +282,15 @@ const Alquileres = () => {
     };
 
     useEffect(() => {
-
         cargarAlquileres();
         cargarDatos();
-
     }, []);
 
-    // =========================
+    // =========================================================
     // FILTRO
-    // =========================
-    useEffect(() => {
+    // =========================================================
 
+    useEffect(() => {
         const texto = textoBusqueda.toLowerCase();
 
         setAlquileresFiltrados(
@@ -196,20 +300,18 @@ const Alquileres = () => {
                     a.fecha_inicio,
                     a.fecha_fin,
                     String(a.id_alquiler),
-                ]
-                    .some((campo) =>
-                        campo?.toLowerCase().includes(texto)
-                    )
+                ].some((campo) =>
+                    campo?.toLowerCase().includes(texto)
+                )
             )
         );
-
     }, [textoBusqueda, alquileres]);
 
-    // =========================
+    // =========================================================
     // INPUT REGISTRO
-    // =========================
-    const manejoCambioInput = (e) => {
+    // =========================================================
 
+    const manejoCambioInput = (e) => {
         const { name, value } = e.target;
 
         setNuevoAlquiler((prev) => ({
@@ -218,11 +320,11 @@ const Alquileres = () => {
         }));
     };
 
-    // =========================
+    // =========================================================
     // INPUT EDICIÓN
-    // =========================
-    const manejoCambioInputEdicion = (e) => {
+    // =========================================================
 
+    const manejoCambioInputEdicion = (e) => {
         const { name, value } = e.target;
 
         setAlquilerEditar((prev) => ({
@@ -231,8 +333,10 @@ const Alquileres = () => {
         }));
     };
 
+    // =========================================================
+    // EMAIL
+    // =========================================================
 
-    // /////////////// El coso de email ///////////////// //
     useEffect(() => {
         emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
     }, []);
@@ -243,32 +347,28 @@ const Alquileres = () => {
     };
 
     const formatearAlquileresParaCorreo = () => {
-
         if (alquileres.length === 0) {
             return "No hay alquileres registrados.";
         }
 
         let texto = `LISTADO DE ALQUILERES\n\n`;
+
         texto += `Fecha: ${new Date().toLocaleDateString("es-NI")}\n`;
         texto += `Total de alquileres: ${alquileres.length}\n\n`;
 
         alquileres.forEach((alquiler, index) => {
-
             texto += `${index + 1}. Alquiler #${alquiler.id_alquiler}\n`;
             texto += `   Fecha Inicio: ${alquiler.fecha_inicio}\n`;
             texto += `   Fecha Fin: ${alquiler.fecha_fin}\n`;
             texto += `   Estado: ${alquiler.estado}\n`;
             texto += `\n`;
-
         });
 
         return texto;
     };
 
     const enviarCorreoAlquileres = () => {
-
         if (!emailDestino.trim()) {
-
             setToast({
                 mostrar: true,
                 mensaje: "Por favor ingresa un correo destino.",
@@ -296,7 +396,6 @@ const Alquileres = () => {
                 templateParams
             )
             .then(() => {
-
                 setToast({
                     mostrar: true,
                     mensaje: "Correo enviado correctamente.",
@@ -305,10 +404,8 @@ const Alquileres = () => {
 
                 setMostrarModalCorreo(false);
                 setEmailDestino("");
-
             })
             .catch((error) => {
-
                 console.error("Error EmailJS:", error);
 
                 setToast({
@@ -316,72 +413,81 @@ const Alquileres = () => {
                     mensaje: "Error al enviar el correo.",
                     tipo: "error",
                 });
-
             })
             .finally(() => {
                 setEnviandoCorreo(false);
             });
     };
 
+    // =========================================================
+    // CALCULAR DÍAS Y PRECIO
+    // =========================================================
+
     useEffect(() => {
+        if (
+            nuevoAlquiler.id_coche &&
+            nuevoAlquiler.fecha_inicio &&
+            nuevoAlquiler.fecha_fin
+        ) {
+            const cocheSeleccionado = coches.find(
+                (c) =>
+                    c.id_coche ===
+                    Number(nuevoAlquiler.id_coche)
+            );
 
-    if (
-        nuevoAlquiler.id_coche &&
-        nuevoAlquiler.fecha_inicio &&
-        nuevoAlquiler.fecha_fin
-    ) {
+            if (!cocheSeleccionado) return;
 
-        const cocheSeleccionado = coches.find(
-            c => c.id_coche === Number(nuevoAlquiler.id_coche)
-        );
+            const valorDia = Number(
+                cocheSeleccionado.valor_dia
+            );
 
-        if (!cocheSeleccionado) return;
+            const inicio = new Date(
+                nuevoAlquiler.fecha_inicio
+            );
 
-        const valorDia = Number(cocheSeleccionado.valor_dia);
+            const fin = new Date(
+                nuevoAlquiler.fecha_fin
+            );
 
-        const inicio = new Date(nuevoAlquiler.fecha_inicio);
-        const fin = new Date(nuevoAlquiler.fecha_fin);
+            if (fin < inicio) {
+                setNuevoAlquiler((prev) => ({
+                    ...prev,
+                    cantidad_dias: 0,
+                    precio_total: 0
+                }));
 
-        
-        if (fin < inicio) {
-            setNuevoAlquiler(prev => ({
+                return;
+            }
+
+            const cantidadDias =
+                Math.floor(
+                    (fin - inicio) /
+                    (1000 * 60 * 60 * 24)
+                ) + 1;
+
+            const precioTotal =
+                valorDia * cantidadDias;
+
+            setNuevoAlquiler((prev) => ({
                 ...prev,
-                cantidad_dias: 0,
-                precio_total: 0
+                valor_dia: valorDia,
+                cantidad_dias: cantidadDias,
+                precio_total: precioTotal,
             }));
-            return;
         }
+    }, [
+        nuevoAlquiler.id_coche,
+        nuevoAlquiler.fecha_inicio,
+        nuevoAlquiler.fecha_fin,
+        coches
+    ]);
 
-        const cantidadDias =
-            Math.floor(
-                (fin - inicio) / (1000 * 60 * 60 * 24)
-            ) + 1;
-
-        const precioTotal = valorDia * cantidadDias;
-
-        setNuevoAlquiler(prev => ({
-            ...prev,
-            valor_dia: valorDia,
-            cantidad_dias: cantidadDias,
-            precio_total: precioTotal,
-        }));
-    }
-
-}, [
-    nuevoAlquiler.id_coche,
-    nuevoAlquiler.fecha_inicio,
-    nuevoAlquiler.fecha_fin,
-    coches
-]);
-
-
-    // =========================
+    // =========================================================
     // REGISTRAR
-    // =========================
+    // =========================================================
+
     const agregarAlquiler = async () => {
-
         try {
-
             if (
                 !nuevoAlquiler.fecha_inicio ||
                 !nuevoAlquiler.fecha_fin ||
@@ -390,7 +496,6 @@ const Alquileres = () => {
                 !nuevoAlquiler.id_coche ||
                 !nuevoAlquiler.precio_total
             ) {
-
                 setToast({
                     mostrar: true,
                     mensaje: "Debe completar todos los campos",
@@ -404,38 +509,85 @@ const Alquileres = () => {
                 .from("alquiler")
                 .insert([
                     {
-                        fecha_inicio: nuevoAlquiler.fecha_inicio,
-                        fecha_fin: nuevoAlquiler.fecha_fin,
-                        estado: nuevoAlquiler.estado,
+                        fecha_inicio:
+                            nuevoAlquiler.fecha_inicio,
+
+                        fecha_fin:
+                            nuevoAlquiler.fecha_fin,
+
+                        estado:
+                            nuevoAlquiler.estado,
                     },
                 ])
                 .select();
 
             if (error) throw error;
 
-            const idAlquiler = data[0].id_alquiler;
+            const idAlquiler =
+                data[0].id_alquiler;
 
-            const { error: errorDetalle } = await supabase
-                .from("detalle_alquiler")
-                .insert([
-                    {
-                        id_alquiler: idAlquiler,
-                        id_usuario: parseInt(nuevoAlquiler.id_usuario),
-                        id_coche: parseInt(nuevoAlquiler.id_coche),
-                        valor_dia: parseFloat(nuevoAlquiler.valor_dia),
-                        cantidad_dias: parseInt(nuevoAlquiler.cantidad_dias),
-                        precio_total: parseFloat(nuevoAlquiler.precio_total),
-                    },
-                ]);
+            const { error: errorDetalle } =
+                await supabase
+                    .from("detalle_alquiler")
+                    .insert([
+                        {
+                            id_alquiler:
+                                idAlquiler,
+
+                            id_usuario:
+                                parseInt(
+                                    nuevoAlquiler.id_usuario
+                                ),
+
+                            id_coche:
+                                parseInt(
+                                    nuevoAlquiler.id_coche
+                                ),
+
+                            valor_dia:
+                                parseFloat(
+                                    nuevoAlquiler.valor_dia
+                                ),
+
+                            cantidad_dias:
+                                parseInt(
+                                    nuevoAlquiler.cantidad_dias
+                                ),
+
+                            precio_total:
+                                parseFloat(
+                                    nuevoAlquiler.precio_total
+                                ),
+                        },
+                    ]);
 
             if (errorDetalle) throw errorDetalle;
+
+            const estadoNuevoAlquiler =
+                String(
+                    nuevoAlquiler.estado || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            const cocheEstaEnAlquiler =
+                estadoNuevoAlquiler === "en curso" ||
+                estadoNuevoAlquiler === "en alquiler" ||
+                estadoNuevoAlquiler === "alquilado" ||
+                estadoNuevoAlquiler === "activo" ||
+                estadoNuevoAlquiler === "vigente";
 
             await supabase
                 .from("coche")
                 .update({
-                    estado: "En Alquiler",
+                    estado: cocheEstaEnAlquiler
+                        ? "En Alquiler"
+                        : "Disponible",
                 })
-                .eq("id_coche", nuevoAlquiler.id_coche);
+                .eq(
+                    "id_coche",
+                    nuevoAlquiler.id_coche
+                );
 
             setMostrarModal(false);
 
@@ -450,17 +602,15 @@ const Alquileres = () => {
                 precio_total: 0,
             });
 
-            cargarAlquileres();
-            cargarDatos();
+            await cargarAlquileres();
+            await cargarDatos();
 
             setToast({
                 mostrar: true,
                 mensaje: "Alquiler registrado correctamente",
                 tipo: "exito",
             });
-
         } catch (error) {
-
             console.log(error);
 
             setToast({
@@ -471,37 +621,42 @@ const Alquileres = () => {
         }
     };
 
-
-    // =========================
+    // =========================================================
     // ACTUALIZAR
-    // =========================
+    // =========================================================
+
     const actualizarAlquiler = async () => {
-
         try {
-
             const { error } = await supabase
                 .from("alquiler")
                 .update({
-                    fecha_inicio: alquilerEditar.fecha_inicio,
-                    fecha_fin: alquilerEditar.fecha_fin,
-                    estado: alquilerEditar.estado,
+                    fecha_inicio:
+                        alquilerEditar.fecha_inicio,
+
+                    fecha_fin:
+                        alquilerEditar.fecha_fin,
+
+                    estado:
+                        alquilerEditar.estado,
                 })
-                .eq("id_alquiler", alquilerEditar.id_alquiler);
+                .eq(
+                    "id_alquiler",
+                    alquilerEditar.id_alquiler
+                );
 
             if (error) throw error;
 
             setMostrarModalEdicion(false);
 
-            cargarAlquileres();
+            await cargarAlquileres();
+            await cargarDatos();
 
             setToast({
                 mostrar: true,
                 mensaje: "Alquiler actualizado correctamente",
                 tipo: "exito",
             });
-
         } catch (error) {
-
             console.log(error);
 
             setToast({
@@ -512,60 +667,66 @@ const Alquileres = () => {
         }
     };
 
-    // =========================
+    // =========================================================
     // ELIMINAR
-    // =========================
+    // =========================================================
+
     const eliminarAlquiler = async () => {
-
         try {
+            if (!alquilerAEliminar?.id_alquiler) {
+                return;
+            }
 
-            if (!alquilerAEliminar?.id_alquiler) return;
-
-            // buscar coche relacionado
             const { data: detalle } = await supabase
                 .from("detalle_alquiler")
                 .select("id_coche")
-                .eq("id_alquiler", alquilerAEliminar.id_alquiler)
+                .eq(
+                    "id_alquiler",
+                    alquilerAEliminar.id_alquiler
+                )
                 .single();
 
-            // cambiar estado del coche a disponible
             if (detalle) {
-
                 await supabase
                     .from("coche")
                     .update({
                         estado: "Disponible",
                     })
-                    .eq("id_coche", detalle.id_coche);
+                    .eq(
+                        "id_coche",
+                        detalle.id_coche
+                    );
             }
 
-            // eliminar detalle
             await supabase
                 .from("detalle_alquiler")
                 .delete()
-                .eq("id_alquiler", alquilerAEliminar.id_alquiler);
+                .eq(
+                    "id_alquiler",
+                    alquilerAEliminar.id_alquiler
+                );
 
-            // eliminar alquiler
             const { error } = await supabase
                 .from("alquiler")
                 .delete()
-                .eq("id_alquiler", alquilerAEliminar.id_alquiler);
+                .eq(
+                    "id_alquiler",
+                    alquilerAEliminar.id_alquiler
+                );
 
             if (error) throw error;
 
             setMostrarModalEliminacion(false);
 
-            cargarAlquileres();
-            cargarDatos();
+            await cargarAlquileres();
+            await cargarDatos();
 
             setToast({
                 mostrar: true,
                 mensaje: "Alquiler eliminado correctamente",
                 tipo: "exito",
             });
-
         } catch (error) {
-
             console.log(error);
 
             setToast({
@@ -576,45 +737,42 @@ const Alquileres = () => {
         }
     };
 
-    // =========================
+    // =========================================================
     // VER DETALLE
-    // =========================
+    // =========================================================
+
     const verDetalleAlquiler = async (id_alquiler) => {
-
         try {
-
             const { data, error } = await supabase
                 .from("detalle_alquiler")
                 .select(`
-    id_detalle_alquiler,
-    id_usuario,
-    id_coche,
-    valor_dia,
-    cantidad_dias,
-    precio_total,
-
-    usuario:id_usuario (
-        nombre1,
-        apellido1
-    ),
-
-    coche:id_coche (
-        marca,
-        modelo
-    )
-`)
-                .eq("id_alquiler", id_alquiler);
+                    id_detalle_alquiler,
+                    id_usuario,
+                    id_coche,
+                    valor_dia,
+                    cantidad_dias,
+                    precio_total,
+                    usuario:id_usuario (
+                        nombre1,
+                        apellido1
+                    ),
+                    coche:id_coche (
+                        marca,
+                        modelo
+                    )
+                `)
+                .eq(
+                    "id_alquiler",
+                    id_alquiler
+                );
 
             if (error) throw error;
 
             console.log(data);
 
             setDetalleAlquiler(data || []);
-
             setMostrarModalDetalle(true);
-
         } catch (error) {
-
             console.log(error);
 
             setToast({
@@ -626,39 +784,47 @@ const Alquileres = () => {
     };
 
     const abrirModalEdicion = (alquiler) => {
-
         setAlquilerEditar(alquiler);
         setMostrarModalEdicion(true);
     };
 
     const abrirModalEliminacion = (alquiler) => {
-
         setAlquilerAEliminar(alquiler);
         setMostrarModalEliminacion(true);
     };
 
+    // =========================================================
+    // ABRIR MODAL DEVOLUCIÓN
+    // =========================================================
+
     const abrirModalDevolucion = async (alquiler) => {
         try {
-            const { data: detalle, error } = await supabase
+            const {
+                data: detalle,
+                error
+            } = await supabase
                 .from("detalle_alquiler")
                 .select(`
-                id_detalle_alquiler,
-                id_usuario,
-                id_coche,
-                valor_dia,
-                cantidad_dias,
-                precio_total,
-                usuario:id_usuario (
-                    nombre1,
-                    apellido1
-                ),
-                coche:id_coche (
-                    marca,
-                    modelo,
-                    placa
+                    id_detalle_alquiler,
+                    id_usuario,
+                    id_coche,
+                    valor_dia,
+                    cantidad_dias,
+                    precio_total,
+                    usuario:id_usuario (
+                        nombre1,
+                        apellido1
+                    ),
+                    coche:id_coche (
+                        marca,
+                        modelo,
+                        placa
+                    )
+                `)
+                .eq(
+                    "id_alquiler",
+                    alquiler.id_alquiler
                 )
-            `)
-                .eq("id_alquiler", alquiler.id_alquiler)
                 .maybeSingle();
 
             if (error) throw error;
@@ -669,12 +835,16 @@ const Alquileres = () => {
             });
 
             setFechaDevolucion(
-                new Date().toISOString().split("T")[0]
+                new Date()
+                    .toISOString()
+                    .split("T")[0]
             );
 
             setMontoFinal(
                 detalle?.precio_total
-                    ? String(detalle.precio_total)
+                    ? String(
+                        detalle.precio_total
+                    )
                     : ""
             );
 
@@ -688,11 +858,16 @@ const Alquileres = () => {
 
             setToast({
                 mostrar: true,
-                mensaje: "Error al cargar la información del alquiler.",
+                mensaje:
+                    "Error al cargar la información del alquiler.",
                 tipo: "error",
             });
         }
     };
+
+    // =========================================================
+    // REGISTRAR DEVOLUCIÓN
+    // =========================================================
 
     const registrarDevolucion = async () => {
         try {
@@ -703,50 +878,79 @@ const Alquileres = () => {
             if (!fechaDevolucion || !montoFinal) {
                 setToast({
                     mostrar: true,
-                    mensaje: "Debe completar la fecha de devolución y el monto final.",
+                    mensaje:
+                        "Debe completar la fecha de devolución y el monto final.",
                     tipo: "advertencia",
                 });
+
                 return;
             }
 
             const especificaciones = {
-                estado_general: estadoGeneral,
-                kilometraje_devolucion: kilometrajeDevolucion
-                    ? Number(kilometrajeDevolucion)
-                    : null,
-                nivel_combustible: nivelCombustible,
+                estado_general:
+                    estadoGeneral,
+
+                kilometraje_devolucion:
+                    kilometrajeDevolucion
+                        ? Number(
+                            kilometrajeDevolucion
+                        )
+                        : null,
+
+                nivel_combustible:
+                    nivelCombustible,
             };
 
-            const { error: errorAlquiler } = await supabase
+            const {
+                error: errorAlquiler
+            } = await supabase
                 .from("alquiler")
                 .update({
                     fecha_entrega:
                         alquilerADevolver.fecha_entrega ||
                         alquilerADevolver.fecha_inicio,
-                    fecha_devolucion: fechaDevolucion,
-                    monto_final: Number(montoFinal),
-                    especificaciones: especificaciones,
-                    estado: "Finalizado",
+
+                    fecha_devolucion:
+                        fechaDevolucion,
+
+                    monto_final:
+                        Number(montoFinal),
+
+                    especificaciones:
+                        especificaciones,
+
+                    estado:
+                        "Finalizado",
                 })
                 .eq(
                     "id_alquiler",
                     alquilerADevolver.id_alquiler
                 );
 
-            if (errorAlquiler) throw errorAlquiler;
+            if (errorAlquiler) {
+                throw errorAlquiler;
+            }
 
-            if (alquilerADevolver.detalle?.id_coche) {
-                const { error: errorCoche } = await supabase
+            if (
+                alquilerADevolver.detalle?.id_coche
+            ) {
+                const {
+                    error: errorCoche
+                } = await supabase
                     .from("coche")
                     .update({
                         estado: "Disponible",
                     })
                     .eq(
                         "id_coche",
-                        alquilerADevolver.detalle.id_coche
+                        alquilerADevolver
+                            .detalle
+                            .id_coche
                     );
 
-                if (errorCoche) throw errorCoche;
+                if (errorCoche) {
+                    throw errorCoche;
+                }
             }
 
             setMostrarModalDevolucion(false);
@@ -757,7 +961,8 @@ const Alquileres = () => {
 
             setToast({
                 mostrar: true,
-                mensaje: "Devolución registrada correctamente.",
+                mensaje:
+                    "Devolución registrada correctamente.",
                 tipo: "exito",
             });
         } catch (error) {
@@ -765,26 +970,21 @@ const Alquileres = () => {
 
             setToast({
                 mostrar: true,
-                mensaje: "Error al registrar la devolución.",
+                mensaje:
+                    "Error al registrar la devolución.",
                 tipo: "error",
             });
         }
     };
 
     return (
-
         <div className="inicio-contenedor">
             <div className="contenedor-dashboard">
-
                 <Container fluid>
 
                     <div className="dashboard-card mb-4">
-
                         <Row className="align-items-center mb-3">
-
-
                             <Col>
-
                                 <h3 className="fw-bold mb-0">
                                     <i className="bi bi-calendar-check-fill me-2 text-danger"></i>
                                     Alquileres
@@ -793,11 +993,9 @@ const Alquileres = () => {
                                 <small className="text-muted">
                                     Gestión de alquileres registrados
                                 </small>
-
                             </Col>
 
                             <Col className="text-end">
-
                                 <Button
                                     variant="danger"
                                     className="rounded-pill px-4 shadow-sm me-2"
@@ -806,7 +1004,6 @@ const Alquileres = () => {
                                     <i className="bi bi-file-earmark-pdf-fill me-2"></i>
                                     PDF
                                 </Button>
-
 
                                 <Button
                                     variant="danger"
@@ -820,309 +1017,433 @@ const Alquileres = () => {
                                 <Button
                                     variant="danger"
                                     className="rounded-pill px-4 shadow-sm"
-                                    onClick={() => setMostrarModal(true)}
+                                    onClick={() =>
+                                        setMostrarModal(true)
+                                    }
                                 >
                                     <i className="bi bi-plus-circle me-2"></i>
                                     Nuevo Alquiler
                                 </Button>
-
                             </Col>
-
                         </Row>
-
                     </div>
+
                     <hr />
 
                     <div className="dashboard-card mb-4">
-
                         <Row>
-
                             <Col md={5}>
-
                                 <CuadroBusquedas
-                                    textoBusqueda={textoBusqueda}
-                                    manejarCambioBusqueda={(e) =>
-                                        setTextoBusqueda(e.target.value)
+                                    textoBusqueda={
+                                        textoBusqueda
+                                    }
+                                    manejarCambioBusqueda={(
+                                        e
+                                    ) =>
+                                        setTextoBusqueda(
+                                            e.target.value
+                                        )
                                     }
                                     placeholder="Buscar alquiler..."
                                 />
-
                             </Col>
-
                         </Row>
-
                     </div>
 
                     <div className="dashboard-card">
-
-                        
                         <div className="dashboard-card">
                             {cargando ? (
                                 <div className="text-center p-5">
-                                    <Spinner animation="border" variant="success" />
+                                    <Spinner
+                                        animation="border"
+                                        variant="success"
+                                    />
                                 </div>
                             ) : (
                                 <>
-                                    {/* VISTA DE ESCRITORIO (PC): Oculta en móviles */}
                                     <div className="d-none d-md-block">
-                                            <TablaAlquileres
-                                                alquileres={alquileresFiltrados}
-                                                abrirModalEdicion={abrirModalEdicion}
-                                                abrirModalEliminacion={abrirModalEliminacion}
-                                                verDetalleAlquiler={verDetalleAlquiler}
-                                                registrarDevolucion={abrirModalDevolucion}
-                                            />
+                                        <TablaAlquileres
+                                            alquileres={
+                                                alquileresFiltrados
+                                            }
+                                            abrirModalEdicion={
+                                                abrirModalEdicion
+                                            }
+                                            abrirModalEliminacion={
+                                                abrirModalEliminacion
+                                            }
+                                            verDetalleAlquiler={
+                                                verDetalleAlquiler
+                                            }
+                                            registrarDevolucion={
+                                                abrirModalDevolucion
+                                            }
+                                        />
                                     </div>
 
-                                    {/* VISTA MÓVIL: Visible en smartphones */}
                                     <div className="d-block d-md-none">
-                                            <TarjetaAlquiler
-                                                alquileres={alquileresFiltrados}
-                                                abrirModalEdicion={abrirModalEdicion}
-                                                abrirModalEliminacion={abrirModalEliminacion}
-                                                verDetalleAlquiler={verDetalleAlquiler}
-                                                registrarDevolucion={abrirModalDevolucion}
-                                            />
+                                        <TarjetaAlquiler
+                                            alquileres={
+                                                alquileresFiltrados
+                                            }
+                                            abrirModalEdicion={
+                                                abrirModalEdicion
+                                            }
+                                            abrirModalEliminacion={
+                                                abrirModalEliminacion
+                                            }
+                                            verDetalleAlquiler={
+                                                verDetalleAlquiler
+                                            }
+                                            registrarDevolucion={
+                                                abrirModalDevolucion
+                                            }
+                                        />
                                     </div>
                                 </>
                             )}
                         </div>
 
-                        {/* ... resto de los modales igual ... */}
+                        <ModalRegistroAlquiler
+                            mostrarModal={mostrarModal}
+                            setMostrarModal={
+                                setMostrarModal
+                            }
+                            nuevoAlquiler={
+                                nuevoAlquiler
+                            }
+                            manejoCambioInput={
+                                manejoCambioInput
+                            }
+                            agregarAlquiler={
+                                agregarAlquiler
+                            }
+                            usuarios={usuarios}
+                            coches={coches}
+                        />
 
-                    </div>
+                        <ModalEdicionAlquiler
+                            mostrarModalEdicion={
+                                mostrarModalEdicion
+                            }
+                            setMostrarModalEdicion={
+                                setMostrarModalEdicion
+                            }
+                            alquilerEditar={
+                                alquilerEditar
+                            }
+                            manejoCambioInputEdicion={
+                                manejoCambioInputEdicion
+                            }
+                            actualizarAlquiler={
+                                actualizarAlquiler
+                            }
+                        />
 
-                    <ModalRegistroAlquiler
-                        mostrarModal={mostrarModal}
-                        setMostrarModal={setMostrarModal}
-                        nuevoAlquiler={nuevoAlquiler}
-                        manejoCambioInput={manejoCambioInput}
-                        agregarAlquiler={agregarAlquiler}
-                        usuarios={usuarios}
-                        coches={coches}
-                    />
+                        <ModalEliminacionAlquiler
+                            mostrarModalEliminacion={
+                                mostrarModalEliminacion
+                            }
+                            setMostrarModalEliminacion={
+                                setMostrarModalEliminacion
+                            }
+                            eliminarAlquiler={
+                                eliminarAlquiler
+                            }
+                            alquilerAEliminar={
+                                alquilerAEliminar
+                            }
+                        />
 
-                    <ModalEdicionAlquiler
-                        mostrarModalEdicion={mostrarModalEdicion}
-                        setMostrarModalEdicion={setMostrarModalEdicion}
-                        alquilerEditar={alquilerEditar}
-                        manejoCambioInputEdicion={manejoCambioInputEdicion}
-                        actualizarAlquiler={actualizarAlquiler}
-                    />
+                        <ModalDetalleAlquiler
+                            mostrarModalDetalle={
+                                mostrarModalDetalle
+                            }
+                            setMostrarModalDetalle={
+                                setMostrarModalDetalle
+                            }
+                            detalleAlquiler={
+                                detalleAlquiler
+                            }
+                        />
 
-                    <ModalEliminacionAlquiler
-                        mostrarModalEliminacion={mostrarModalEliminacion}
-                        setMostrarModalEliminacion={setMostrarModalEliminacion}
-                        eliminarAlquiler={eliminarAlquiler}
-                        alquilerAEliminar={alquilerAEliminar}
-                    />
+                        <ModalEnvioCorreoAlquileres
+                            mostrarModalCorreo={
+                                mostrarModalCorreo
+                            }
+                            setMostrarModalCorreo={
+                                setMostrarModalCorreo
+                            }
+                            emailDestino={
+                                emailDestino
+                            }
+                            setEmailDestino={
+                                setEmailDestino
+                            }
+                            enviandoCorreo={
+                                enviandoCorreo
+                            }
+                            enviarCorreoAlquileres={
+                                enviarCorreoAlquileres
+                            }
+                            totalAlquileres={
+                                alquileres.length
+                            }
+                        />
 
-                    <ModalDetalleAlquiler
-                        mostrarModalDetalle={mostrarModalDetalle}
-                        setMostrarModalDetalle={setMostrarModalDetalle}
-                        detalleAlquiler={detalleAlquiler}
-                    />
+                        {mostrarModalDevolucion && (
+                            <div
+                                className="modal fade show d-block"
+                                tabIndex="-1"
+                                style={{
+                                    backgroundColor:
+                                        "rgba(0,0,0,0.5)"
+                                }}
+                            >
+                                <div className="modal-dialog modal-dialog-centered">
+                                    <div className="modal-content">
 
-                    <ModalEnvioCorreoAlquileres
-                        mostrarModalCorreo={mostrarModalCorreo}
-                        setMostrarModalCorreo={setMostrarModalCorreo}
-                        emailDestino={emailDestino}
-                        setEmailDestino={setEmailDestino}
-                        enviandoCorreo={enviandoCorreo}
-                        enviarCorreoAlquileres={enviarCorreoAlquileres}
-                        totalAlquileres={alquileres.length}
-                    />
+                                        <div className="modal-header bg-success text-white">
+                                            <h5 className="modal-title">
+                                                <i className="bi bi-car-front-fill me-2"></i>
+                                                Registrar devolución
+                                            </h5>
 
-                    {mostrarModalDevolucion && (
-                        <div
-                            className="modal fade show d-block"
-                            tabIndex="-1"
-                            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-                        >
-                            <div className="modal-dialog modal-dialog-centered">
-                                <div className="modal-content">
-
-                                    <div className="modal-header bg-success text-white">
-                                        <h5 className="modal-title">
-                                            <i className="bi bi-car-front-fill me-2"></i>
-                                            Registrar devolución
-                                        </h5>
-
-                                        <button
-                                            type="button"
-                                            className="btn-close btn-close-white"
-                                            onClick={() =>
-                                                setMostrarModalDevolucion(false)
-                                            }
-                                        ></button>
-                                    </div>
-
-                                    <div className="modal-body">
-
-                                        {alquilerADevolver && (
-                                            <div className="alert alert-light border mb-3">
-                                                <strong>
-                                                    Alquiler #{alquilerADevolver.id_alquiler}
-                                                </strong>
-
-                                                {alquilerADevolver.detalle?.usuario && (
-                                                    <div className="small mt-1">
-                                                        <i className="bi bi-person me-1"></i>
-                                                        Cliente:{" "}
-                                                        {
-                                                            alquilerADevolver.detalle.usuario
-                                                                .nombre1
-                                                        }{" "}
-                                                        {
-                                                            alquilerADevolver.detalle.usuario
-                                                                .apellido1
-                                                        }
-                                                    </div>
-                                                )}
-
-                                                {alquilerADevolver.detalle?.coche && (
-                                                    <div className="small mt-1">
-                                                        <i className="bi bi-car-front me-1"></i>
-                                                        Vehículo:{" "}
-                                                        {
-                                                            alquilerADevolver.detalle.coche
-                                                                .marca
-                                                        }{" "}
-                                                        {
-                                                            alquilerADevolver.detalle.coche
-                                                                .modelo
-                                                        }
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <div className="mb-3">
-                                            <label className="form-label fw-semibold">
-                                                Fecha de devolución
-                                            </label>
-
-                                            <input
-                                                type="date"
-                                                className="form-control"
-                                                value={fechaDevolucion}
-                                                onChange={(e) =>
-                                                    setFechaDevolucion(e.target.value)
-                                                }
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label fw-semibold">
-                                                Monto final
-                                            </label>
-
-                                            <input
-                                                type="number"
-                                                className="form-control"
-                                                min="0"
-                                                step="0.01"
-                                                value={montoFinal}
-                                                onChange={(e) =>
-                                                    setMontoFinal(e.target.value)
-                                                }
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label fw-semibold">
-                                                Estado general del vehículo
-                                            </label>
-
-                                            <select
-                                                className="form-select"
-                                                value={estadoGeneral}
-                                                onChange={(e) =>
-                                                    setEstadoGeneral(e.target.value)
-                                                }
-                                            >
-                                                <option value="Bueno">Bueno</option>
-                                                <option value="Regular">Regular</option>
-                                                <option value="Malo">Malo</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label fw-semibold">
-                                                Kilometraje de devolución
-                                            </label>
-
-                                            <input
-                                                type="number"
-                                                className="form-control"
-                                                min="0"
-                                                placeholder="Ej. 45750"
-                                                value={kilometrajeDevolucion}
-                                                onChange={(e) =>
-                                                    setKilometrajeDevolucion(
-                                                        e.target.value
+                                            <button
+                                                type="button"
+                                                className="btn-close btn-close-white"
+                                                onClick={() =>
+                                                    setMostrarModalDevolucion(
+                                                        false
                                                     )
                                                 }
-                                            />
+                                            ></button>
                                         </div>
 
-                                        <div className="mb-3">
-                                            <label className="form-label fw-semibold">
-                                                Nivel de combustible
-                                            </label>
+                                        <div className="modal-body">
 
-                                            <select
-                                                className="form-select"
-                                                value={nivelCombustible}
-                                                onChange={(e) =>
-                                                    setNivelCombustible(e.target.value)
+                                            {alquilerADevolver && (
+                                                <div className="alert alert-light border mb-3">
+
+                                                    <strong>
+                                                        Alquiler #
+                                                        {
+                                                            alquilerADevolver.id_alquiler
+                                                        }
+                                                    </strong>
+
+                                                    {alquilerADevolver.detalle?.usuario && (
+                                                        <div className="small mt-1">
+                                                            <i className="bi bi-person me-1"></i>
+                                                            Cliente:{" "}
+                                                            {
+                                                                alquilerADevolver
+                                                                    .detalle
+                                                                    .usuario
+                                                                    .nombre1
+                                                            }{" "}
+                                                            {
+                                                                alquilerADevolver
+                                                                    .detalle
+                                                                    .usuario
+                                                                    .apellido1
+                                                            }
+                                                        </div>
+                                                    )}
+
+                                                    {alquilerADevolver.detalle?.coche && (
+                                                        <div className="small mt-1">
+                                                            <i className="bi bi-car-front me-1"></i>
+                                                            Vehículo:{" "}
+                                                            {
+                                                                alquilerADevolver
+                                                                    .detalle
+                                                                    .coche
+                                                                    .marca
+                                                            }{" "}
+                                                            {
+                                                                alquilerADevolver
+                                                                    .detalle
+                                                                    .coche
+                                                                    .modelo
+                                                            }
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="mb-3">
+                                                <label className="form-label fw-semibold">
+                                                    Fecha de devolución
+                                                </label>
+
+                                                <input
+                                                    type="date"
+                                                    className="form-control"
+                                                    value={
+                                                        fechaDevolucion
+                                                    }
+                                                    onChange={(e) =>
+                                                        setFechaDevolucion(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="form-label fw-semibold">
+                                                    Monto final
+                                                </label>
+
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={
+                                                        montoFinal
+                                                    }
+                                                    onChange={(e) =>
+                                                        setMontoFinal(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="form-label fw-semibold">
+                                                    Estado general del vehículo
+                                                </label>
+
+                                                <select
+                                                    className="form-select"
+                                                    value={
+                                                        estadoGeneral
+                                                    }
+                                                    onChange={(e) =>
+                                                        setEstadoGeneral(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                >
+                                                    <option value="Bueno">
+                                                        Bueno
+                                                    </option>
+
+                                                    <option value="Regular">
+                                                        Regular
+                                                    </option>
+
+                                                    <option value="Malo">
+                                                        Malo
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="form-label fw-semibold">
+                                                    Kilometraje de devolución
+                                                </label>
+
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    min="0"
+                                                    placeholder="Ej. 45750"
+                                                    value={
+                                                        kilometrajeDevolucion
+                                                    }
+                                                    onChange={(e) =>
+                                                        setKilometrajeDevolucion(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="form-label fw-semibold">
+                                                    Nivel de combustible
+                                                </label>
+
+                                                <select
+                                                    className="form-select"
+                                                    value={
+                                                        nivelCombustible
+                                                    }
+                                                    onChange={(e) =>
+                                                        setNivelCombustible(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                >
+                                                    <option value="Lleno">
+                                                        Lleno
+                                                    </option>
+
+                                                    <option value="3/4">
+                                                        3/4
+                                                    </option>
+
+                                                    <option value="1/2">
+                                                        1/2
+                                                    </option>
+
+                                                    <option value="1/4">
+                                                        1/4
+                                                    </option>
+
+                                                    <option value="Vacío">
+                                                        Vacío
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                        </div>
+
+                                        <div className="modal-footer">
+
+                                            <Button
+                                                variant="secondary"
+                                                onClick={() =>
+                                                    setMostrarModalDevolucion(
+                                                        false
+                                                    )
                                                 }
                                             >
-                                                <option value="Lleno">Lleno</option>
-                                                <option value="3/4">3/4</option>
-                                                <option value="1/2">1/2</option>
-                                                <option value="1/4">1/4</option>
-                                                <option value="Vacío">Vacío</option>
-                                            </select>
+                                                Cancelar
+                                            </Button>
+
+                                            <Button
+                                                variant="success"
+                                                onClick={
+                                                    registrarDevolucion
+                                                }
+                                            >
+                                                <i className="bi bi-check-circle me-1"></i>
+                                                Confirmar devolución
+                                            </Button>
+
                                         </div>
-
                                     </div>
-
-                                    <div className="modal-footer">
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() =>
-                                                setMostrarModalDevolucion(false)
-                                            }
-                                        >
-                                            Cancelar
-                                        </Button>
-
-                                        <Button
-                                            variant="success"
-                                            onClick={registrarDevolucion}
-                                        >
-                                            <i className="bi bi-check-circle me-1"></i>
-                                            Confirmar devolución
-                                        </Button>
-                                    </div>
-
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    <NotificacionOperacion
-                        mostrar={toast.mostrar}
-                        mensaje={toast.mensaje}
-                        tipo={toast.tipo}
-                        onCerrar={() =>
-                            setToast({
-                                ...toast,
-                                mostrar: false,
-                            })
-                        }
-                    />
+                        <NotificacionOperacion
+                            mostrar={toast.mostrar}
+                            mensaje={toast.mensaje}
+                            tipo={toast.tipo}
+                            onCerrar={() =>
+                                setToast({
+                                    ...toast,
+                                    mostrar: false,
+                                })
+                            }
+                        />
+                    </div>
 
                 </Container>
             </div>
