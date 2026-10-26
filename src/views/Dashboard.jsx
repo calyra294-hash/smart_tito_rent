@@ -99,7 +99,7 @@ const Dashboard = () => {
     <div className="inicio-contenedor" style={{ padding: '20px', backgroundColor: '#f8fafc' }}>
       <div className="contenedor-dashboard">
         <Container fluid>
-          <h2 className="mb-1 text-primary fw-bold">Dashboard Analítico de Alquileres vs Reservas</h2>
+          <h2 className="mb-1 fw-bold">Dashboard Analítico de Alquileres vs Reservas</h2>
           <p className="text-muted mb-4">Métricas multidimensionales integradas a partir del Cubo OLAP</p>
 
           {/* PANEL DE FILTROS */}
