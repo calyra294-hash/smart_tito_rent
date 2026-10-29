@@ -1,22 +1,29 @@
 import React, { useState, useMemo } from 'react';
-import { Container, Card, Row, Col, Form } from 'react-bootstrap';
+import { Container, Card, Row, Col, Form, Button, Spinner, Alert } from 'react-bootstrap';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import { GoogleGenAI } from '@google/genai';
+import ReactMarkdown from 'react-markdown';
 
 // Importación de los archivos de datos al mismo nivel de la carpeta
 import { datos_alquileres } from './datos_alquileres.js';
 import { datos_reservas } from './datos_reservas.js';
 
-const COLORES = ['#2563eb', '#f97316', '#16a34a', '#9:333ea', '#e11d48', '#0891b2', '#ca8a04'];
+const COLORES = ['#2563eb', '#f97316', '#16a34a', '#9333ea', '#e11d48', '#0891b2', '#ca8a04'];
 
 const Dashboard = () => {
   // Filtros interactivos
   const [mesFiltro, setMesFiltro] = useState('');
   const [marcaFiltro, setMarcaFiltro] = useState('');
-  const [agruparPor, setAgruparPor] = useState('marca_vehiculo'); // marca_vehiculo, mes, modelo
+  const [agruparPor, setAgruparPor] = useState('marca_vehiculo'); // marca_vehiculo, modelo_vehiculo, mes
   const [tipoGrafico, setTipoGrafico] = useState('bar'); // bar, line, pie
+
+  // Estados para el Análisis de la IA
+  const [analisisIA, setAnalisisIA] = useState('');
+  const [cargandoIA, setCargandoIA] = useState(false);
+  const [errorIA, setErrorIA] = useState('');
 
   // Listas para los dropdowns
   const listaMeses = [9, 10]; // Meses presentes en el dataset
@@ -45,13 +52,8 @@ const Dashboard = () => {
 
   // CÁLCULO DE KPIs DE NEGOCIO (Cruzando ambos hechos)
   const kpis = useMemo(() => {
-    // 1. Ganancia neta Alquileres (monto_final)
     const ingresosAlquileres = alquileresFiltrados.reduce((sum, item) => sum + (Number(item.monto_final) || 0), 0);
-
-    // 2. Proyección/Monto total de Reservas Activas/Totales
     const montoTotalReservas = reservasFiltradas.reduce((sum, item) => sum + (Number(item.monto_total) || 0), 0);
-
-    // 3. Conversión: Reservas aprobadas/activas que se tradujeron en Alquileres Efectivos (completado o en_curso)
     const totalReservas = reservasFiltradas.length;
     const alquileresEfectivos = alquileresFiltrados.filter(a => a.estado === 'completado' || a.estado === 'en_curso').length;
     const tasaConversion = totalReservas > 0 ? ((alquileresEfectivos / totalReservas) * 100).toFixed(1) : 0;
@@ -70,7 +72,6 @@ const Dashboard = () => {
   const datosGrafico = useMemo(() => {
     const mapa = {};
 
-    // Procesar Alquileres
     alquileresFiltrados.forEach(item => {
       const clave = agruparPor === 'mes' ? `Mes ${item.mes_inicio}` : (item[agruparPor] || 'Sin dato');
       if (!mapa[clave]) {
@@ -80,7 +81,6 @@ const Dashboard = () => {
       mapa[clave].cantidadAlquileres += 1;
     });
 
-    // Procesar Reservas
     reservasFiltradas.forEach(item => {
       const clave = agruparPor === 'mes' ? `Mes ${item.mes_inicio}` : (item[agruparPor] || 'Sin dato');
       if (!mapa[clave]) {
@@ -94,6 +94,53 @@ const Dashboard = () => {
   }, [alquileresFiltrados, reservasFiltradas, agruparPor]);
 
   const formatoMoneda = (val) => `$${Number(val).toLocaleString('es-NI')}`;
+
+  // FUNCIÓN PARA GENERAR INTERPRETACIÓN CON GEMINI (API Interactions)
+  const generarInterpretacionIA = async () => {
+    setCargandoIA(true);
+    setErrorIA('');
+
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY;
+
+      if (!apiKey) {
+        throw new Error("No se encontró la API Key en el archivo .env");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+
+      const promptText = `
+        Actúa como un Analista de Negocios y Datos de Inteligencia Empresarial (BI).
+        Analiza los siguientes datos de un Dashboard OLAP de alquileres y reservas de vehículos:
+
+        - Criterio de Agrupación Actual: ${agruparPor.replace('_', ' ')}
+        - Filtro de Mes: ${mesFiltro ? `Mes ${mesFiltro}` : 'Todos'}
+        - Filtro de Marca: ${marcaFiltro || 'Todas'}
+
+        KPIs Globales:
+        - Ingresos Reales Alquileres: $${kpis.ingresosAlquileres}
+        - Monto Solicitado Reservas: $${kpis.montoTotalReservas}
+        - Tasa de Conversión: ${kpis.tasaConversion}% (${kpis.alquileresEfectivos} de ${kpis.totalReservas} reservas efectivas)
+
+        Desglose por categoría (${agruparPor}):
+        ${JSON.stringify(datosGrafico, null, 2)}
+
+        Instrucción estricta: Analiza los datos provistos y genera un resumen ejecutivo directo y estrictamente centrado en los hallazgos clave. Omita saludos, introducciones, conclusiones de cortesía o cualquier referencia al modelo de IA. El texto final debe redactarse de forma fluida y precisa, conteniendo exactamente entre 40 y 60 palabras.
+      `;
+      
+      const interaction = await ai.interactions.create({
+        model: 'gemini-3.8-flash',
+        input: promptText,
+      });
+
+      setAnalisisIA(interaction.output_text);
+    } catch (err) {
+      console.error("Error al conectar con Gemini API:", err);
+      setErrorIA(err.message || 'Error al obtener la interpretación de la IA.');
+    } finally {
+      setCargandoIA(false);
+    }
+  };
 
   return (
     <div className="inicio-contenedor" style={{ padding: '20px', backgroundColor: '#f8fafc' }}>
@@ -187,7 +234,7 @@ const Dashboard = () => {
           </Row>
 
           {/* GRÁFICO PRINCIPAL */}
-          <Card className="p-4 shadow-sm border-0" style={{ minHeight: '450px' }}>
+          <Card className="p-4 shadow-sm border-0 mb-4" style={{ minHeight: '450px' }}>
             <h5 className="fw-bold mb-3 text-secondary">
               Comparativa: Alquileres (Efectivo) vs Reservas por {agruparPor.replace('_', ' ')}
             </h5>
@@ -236,6 +283,53 @@ const Dashboard = () => {
               </ResponsiveContainer>
             </div>
           </Card>
+
+          {/* CUADRO INFERIOR: ANÁLISIS E INTERPRETACIÓN DE IA (CON MARKDOWN) */}
+          <Card className="p-4 shadow-sm border-0 bg-white">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5 className="fw-bold mb-0 text-primary">Análisis he interpretación del gráfico</h5>
+                <small className="text-muted">Interpretación automatizada para potenciar la toma de deciciones</small>
+              </div>
+              <Button 
+                variant="primary" 
+                onClick={generarInterpretacionIA} 
+                disabled={cargandoIA}
+                className="px-4 fw-semibold"
+              >
+                {cargandoIA ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Analizando datos...
+                  </>
+                ) : (
+                  'Generar Análisis con IA'
+                )}
+              </Button>
+            </div>
+
+            {errorIA && (
+              <Alert variant="danger" className="mb-3">
+                {errorIA}
+              </Alert>
+            )}
+
+            {analisisIA ? (
+              <div 
+                className="p-3 rounded bg-light border" 
+                style={{ lineHeight: '1.6', fontSize: '0.95rem' }}
+              >
+                <ReactMarkdown>{analisisIA}</ReactMarkdown>
+              </div>
+            ) : (
+              !cargandoIA && (
+                <div className="text-center py-4 text-muted border border-dashed rounded bg-light">
+                  Haz clic en "Generar Análisis con IA" para obtener una interpretación ejecutiva y recomendaciones basadas en los filtros seleccionados.
+                </div>
+              )
+            )}
+          </Card>
+
         </Container>
       </div>
     </div>
